@@ -14,20 +14,42 @@ jobs:
             - name: Set up SSH
               run: |
                   mkdir -p ~/.ssh
-                  echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+                  # write private key safely and set permissions
+                  printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
                   chmod 600 ~/.ssh/id_rsa
-                  ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+                  # add host key (use port if provided)
+                  if [ -n "$DEPLOY_PORT" ]; then
+                    ssh-keyscan -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+                  else
+                    ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+                  fi
               env:
                   SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
                   DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+                  DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
 
             - name: Rsync project to VPS
               run: |
-                  rsync -avz --delete --exclude='.git' --exclude='.venv' --exclude='data' ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}"
+                  # support optional non-standard SSH port via DEPLOY_PORT secret
+                  SSH_OPTS=""
+                  if [ -n "$DEPLOY_PORT" ]; then
+                    RSYNC_SSH="-e \"ssh -p $DEPLOY_PORT\""
+                  else
+                    RSYNC_SSH=""
+                  fi
+                  eval rsync -avz $RSYNC_SSH --delete --exclude='.git' --exclude='.venv' --exclude='data' ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}"
+              env:
+                  DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
 
             - name: Remote setup and restart
               run: |
-                  ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "bash -l -c 'set -euo pipefail; cd "${{ secrets.DEPLOY_PATH }}"; if [ ! -d .venv ]; then python3 -m venv .venv; fi; . .venv/bin/activate; pip install --upgrade pip; pip install -r requirements.txt; sudo systemctl restart heritage'"
+                  SSH_OPTS=""
+                  if [ -n "$DEPLOY_PORT" ]; then
+                    SSH_OPTS="-p $DEPLOY_PORT"
+                  fi
+                  ssh $SSH_OPTS "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "bash -l -c 'set -euo pipefail; cd "${{ secrets.DEPLOY_PATH }}"; if [ ! -d .venv ]; then python3 -m venv .venv; fi; . .venv/bin/activate; pip install --upgrade pip; pip install -r requirements.txt; sudo systemctl restart heritage'"
+              env:
+                  DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
 
             - name: Done
               run: echo "Deployment to ${{ secrets.DEPLOY_HOST }} completed."
