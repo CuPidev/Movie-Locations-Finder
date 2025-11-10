@@ -11,6 +11,14 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
+            - name: Validate required secrets
+              run: |
+                  if [ -z "${{ secrets.DEPLOY_HOST }}" ] || [ -z "${{ secrets.DEPLOY_USER }}" ] || [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+                    echo "One or more required secrets are missing: DEPLOY_HOST, DEPLOY_USER, SSH_PRIVATE_KEY"
+                    echo "Please set them in the repository Settings → Secrets and Variables → Actions"
+                    exit 1
+                  fi
+
             - name: Start ssh-agent and add key
               uses: webfactory/ssh-agent@v0.7.0
               with:
