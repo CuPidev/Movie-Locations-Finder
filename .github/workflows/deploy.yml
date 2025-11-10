@@ -11,48 +11,37 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
-            - name: Validate required secrets
+            - name: Validate required secrets (password auth)
               run: |
-                  if [ -z "${{ secrets.DEPLOY_HOST }}" ] || [ -z "${{ secrets.DEPLOY_USER }}" ] || [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ] || [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
-                    echo "One or more required secrets are missing: DEPLOY_HOST, DEPLOY_USER, SSH_PRIVATE_KEY, DEPLOY_PATH"
+                  if [ -z "${{ secrets.DEPLOY_HOST }}" ] || [ -z "${{ secrets.DEPLOY_USER }}" ] || [ -z "${{ secrets.DEPLOY_PASSWORD }}" ] || [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
+                    echo "One or more required secrets are missing: DEPLOY_HOST, DEPLOY_USER, DEPLOY_PASSWORD, DEPLOY_PATH"
                     exit 1
                   fi
 
-            - name: Start ssh-agent and add key
-              uses: webfactory/ssh-agent@v0.7.0
-              with:
-                  ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+            - name: Install sshpass for password-based SSH
+              run: sudo apt-get update && sudo apt-get install -y sshpass
 
-            - name: Add host to known_hosts (non-blocking)
-              run: |
-                  mkdir -p ~/.ssh
-                  if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
-                    ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts || true
-                  else
-                    ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts || true
-                  fi
-
-            - name: Preflight SSH check
+            - name: Preflight SSH check (password)
               run: |
                   SSH_OPTS=""
                   if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
                     SSH_OPTS="-p ${{ secrets.DEPLOY_PORT }}"
                   fi
                   echo "Testing SSH connection to ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} ${DEPLOY_PORT:+on port $DEPLOY_PORT}"
-                  ssh -o BatchMode=yes -o ConnectTimeout=10 $SSH_OPTS "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "echo connected" || (echo "SSH preflight failed: check DEPLOY_HOST/DEPLOY_USER and that the deploy public key is in ~/.ssh/authorized_keys" && exit 1)
+                  sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_OPTS "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "echo connected" || (echo "SSH preflight failed: check DEPLOY_HOST/DEPLOY_USER and DEPLOY_PASSWORD, and that PasswordAuthentication is enabled on the VPS" && exit 1)
 
             - name: Create tarball
               run: |
                   tar -czf /tmp/repo_deploy.tar.gz --exclude='.git' --exclude='.venv' --exclude='data' .
                   echo "Created /tmp/repo_deploy.tar.gz (size: $(ls -lh /tmp/repo_deploy.tar.gz | awk '{print $5}'))"
 
-            - name: Copy tarball to VPS
+            - name: Copy tarball to VPS (password auth)
               run: |
                   set -euo pipefail
                   if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
-                    scp -o BatchMode=yes -o ConnectTimeout=10 -P "${{ secrets.DEPLOY_PORT }}" /tmp/repo_deploy.tar.gz "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/repo_deploy.tar.gz"
+                    sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -P "${{ secrets.DEPLOY_PORT }}" /tmp/repo_deploy.tar.gz "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/repo_deploy.tar.gz"
                   else
-                    scp -o BatchMode=yes -o ConnectTimeout=10 /tmp/repo_deploy.tar.gz "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/repo_deploy.tar.gz"
+                    sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 /tmp/repo_deploy.tar.gz "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/repo_deploy.tar.gz"
                   fi
 
             - name: Remote extract, install and restart
@@ -62,7 +51,12 @@ jobs:
                   if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
                     SSH_OPTS="-p ${{ secrets.DEPLOY_PORT }}"
                   fi
-                  ssh $SSH_OPTS "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "bash -s" <<'REMOTE'
+                  # use sshpass to run remote commands over password-based SSH
+                  if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
+                    sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p "${{ secrets.DEPLOY_PORT }}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "bash -s" <<'REMOTE'
+                  else
+                    sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "bash -s" <<'REMOTE'
+                  fi
                     set -euo pipefail
                     DEPLOY_PATH='${{ secrets.DEPLOY_PATH }}'
                     echo "Deploying to $DEPLOY_PATH"
