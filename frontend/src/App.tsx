@@ -9,7 +9,7 @@ export default function App() {
     return (
         <HelmetProvider>
             <BrowserRouter>
-                <div className="min-h-screen bg-gray-50 text-gray-900">
+                <div className="min-h-screen">
                     <Helmet>
                         <title>Heritage Sites Finder</title>
                         <meta
@@ -22,17 +22,29 @@ export default function App() {
                             <h1 className="text-3xl font-semibold mb-2">
                                 🪨Heritage Sites Finder
                             </h1>
-                            <p className="text-sm text-gray-600 mb-2">
+                            <p
+                                className="text-sm mb-2"
+                                style={{ color: "var(--muted)" }}
+                            >
                                 Search UNESCO World Heritage sites by keyword.
                             </p>
-                            <div className="mt-3 mb-4 text-sm text-gray-600">
+                            <div
+                                className="mt-3 mb-4 text-sm"
+                                style={{ color: "var(--muted)" }}
+                            >
                                 Theme: <ThemeSelector />
                             </div>
                             <div className="mt-3">
-                                <h2 className="text-sm font-medium text-gray-700 mb-2">
+                                <h2
+                                    className="text-sm font-medium mb-2"
+                                    style={{ color: "var(--muted)" }}
+                                >
                                     Authors — Team 19
                                 </h2>
-                                <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                                <ul
+                                    className="list-disc pl-5 space-y-1 text-sm"
+                                    style={{ color: "var(--muted)" }}
+                                >
                                     <li>Mateusz Cupryniak</li>
                                     <li>František Vlček</li>
                                     <li>Vasyl Damian</li>

@@ -95,7 +95,7 @@ export default function BrowsePage() {
             <div className="mb-3">
                 <Link
                     to="/"
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                    className="inline-flex items-center gap-2 accent-text hover:opacity-90"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -115,7 +115,12 @@ export default function BrowsePage() {
             </div>
 
             <div id="controls" className="flex items-center gap-3 mb-4">
-                <label className="text-sm text-gray-700 mr-2">Per page:</label>
+                <label
+                    className="text-sm mr-2"
+                    style={{ color: "var(--muted)" }}
+                >
+                    Per page:
+                </label>
                 <select
                     value={String(limit)}
                     onChange={(e) =>
@@ -131,7 +136,7 @@ export default function BrowsePage() {
                 </select>
 
                 <button
-                    className="px-3 py-1 bg-white border rounded text-sm ml-3"
+                    className="btn ml-3"
                     onClick={toggleShuffle}
                     aria-pressed={shuffleMode}
                 >
@@ -147,13 +152,13 @@ export default function BrowsePage() {
             </div>
 
             <div id="pager" className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-gray-700">
+                <div className="text-sm" style={{ color: "var(--muted)" }}>
                     Showing {Math.min(total, offset + 1)}-
                     {Math.min(total, offset + limit)} of {total}
                 </div>
                 <div className="space-x-2">
                     <button
-                        className="px-3 py-1 bg-white border rounded text-sm"
+                        className="btn"
                         onClick={() => {
                             const n = Math.max(0, offset - limit);
                             setOffset(n);
@@ -164,7 +169,7 @@ export default function BrowsePage() {
                         Prev
                     </button>
                     <button
-                        className="px-3 py-1 bg-white border rounded text-sm"
+                        className="btn"
                         onClick={() => {
                             const n = offset + limit;
                             if (n < total) {

@@ -6,11 +6,30 @@
 body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+/* expose a few simple variables for light/dark backgrounds and text */
+:root {
+    --bg: #f8fafc;
+    --text: #0f172a;
+    --muted: #6b7280;
+}
+
+.theme-dark {
+    --bg: #0b1220;
+    --text: #e6eef8;
+    --muted: #94a3b8;
+}
+
+/* apply the variables to the app container and body fallback */
+body {
+    background: var(--bg);
+    color: var(--text);
+}
 .result {
     margin: 0.6rem 0;
     padding: 0.75rem;
-    background: #fff;
-    border: 1px solid #e6e6e6;
+    background: color-mix(in srgb, var(--bg) 100%, white 0%);
+    border: 1px solid rgba(230, 230, 230, 0.7);
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
     max-height: var(--card-collapsed-height, 14rem);
@@ -24,7 +43,7 @@ body {
     transform: translateY(-4px);
     border-color: var(--accent-700);
     box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* keyboard focus outline for accessibility */
@@ -39,7 +58,7 @@ body {
 }
 .description {
     padding-bottom: 3rem;
-    color: #374151;
+    color: var(--muted);
     margin-top: 0.4rem;
     font-size: 1rem;
     line-height: 1.45;
@@ -108,7 +127,7 @@ body {
 }
 .meta {
     margin-top: 0.35rem;
-    color: #6b7280;
+    color: var(--muted);
     font-size: 0.85rem;
 }
 .spinner {
@@ -136,6 +155,83 @@ body {
     --accent: #0d9488;
     --accent-700: #0f766e;
     --accent-50: #ecfdf5;
+}
+
+/* Inputs, selects and controls should follow theme variables */
+:root {
+    --input-bg: #ffffff;
+    --input-border: #d1d5db; /* gray-300 */
+    --button-text: #ffffff;
+}
+.theme-dark {
+    --input-bg: #071428;
+    --input-border: rgba(255, 255, 255, 0.08);
+    --button-text: #ffffff;
+}
+
+input[type="text"],
+select,
+textarea {
+    background: var(--input-bg) !important;
+    color: var(--text) !important;
+    border-color: var(--input-border) !important;
+}
+input::placeholder,
+textarea::placeholder {
+    color: var(--muted) !important;
+    opacity: 1;
+}
+
+/* Replace Tailwind hardcoded text-white in buttons with theme-aware var */
+.text-white {
+    color: var(--button-text) !important;
+}
+
+/* Focus visuals for inputs using accent */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--accent-700) !important;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04), 0 0 0 6px var(--accent-50);
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    cursor: pointer;
+}
+.btn:hover {
+    filter: brightness(0.98);
+}
+.btn[disabled] {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* Primary button variant uses accent */
+.btn-primary {
+    background: var(--accent);
+    color: var(--button-text);
+    border-color: var(--accent-700);
+}
+.btn-primary:hover {
+    background: var(--accent-700);
+}
+
+/* Accent text for links */
+.accent-text {
+    color: var(--accent) !important;
+}
+.accent-text:hover {
+    color: var(--accent-700) !important;
 }
 @media (max-width: 640px) {
     :root {
