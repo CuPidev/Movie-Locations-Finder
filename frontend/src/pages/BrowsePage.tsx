@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ResultsCard from "../components/ResultsCard";
+import { Helmet } from "react-helmet-async";
 
 function qs(key: string, fallback?: string) {
     const params = new URLSearchParams(location.search);
@@ -84,6 +85,13 @@ export default function BrowsePage() {
 
     return (
         <div>
+            <Helmet>
+                <title>Heritage Sites Finder - Browse</title>
+                <meta
+                    name="description"
+                    content="Browse UNESCO World Heritage sites"
+                />
+            </Helmet>
             <div className="mb-3">
                 <Link
                     to="/"
