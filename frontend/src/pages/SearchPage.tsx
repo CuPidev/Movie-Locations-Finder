@@ -55,7 +55,8 @@ export default function SearchPage() {
                 <div className="mb-4 flex justify-center sm:justify-start">
                     <Link
                         to="/browse?shuffle=1"
-                        className="inline-flex items-center gap-2 border border-blue-600 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50"
+                        className="inline-flex items-center gap-2 accent-text border px-3 py-2 rounded-lg"
+                        style={{ borderColor: "var(--accent)" }}
                     >
                         <span className="font-medium text-sm">
                             I want to browse instead
@@ -72,7 +73,7 @@ export default function SearchPage() {
                             type="text"
                             autoFocus
                             placeholder="type here e.g. old castle"
-                            className="border-2 border-gray-300 bg-white rounded px-3 h-10 flex-1 min-w-0 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-600 shadow-sm"
+                            className="border-2 rounded px-3 h-10 flex-1 min-w-0 focus:outline-none shadow-sm"
                         />
                         <label htmlFor="k" className="sr-only">
                             Results
@@ -81,7 +82,7 @@ export default function SearchPage() {
                             id="k"
                             value={k}
                             onChange={(e) => setK(e.target.value)}
-                            className="border-2 border-gray-300 bg-white rounded px-2 h-10 w-20 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-600 shadow-sm"
+                            className="border-2 rounded px-2 h-10 w-20 focus:outline-none shadow-sm"
                         >
                             <option value="5">5</option>
                             <option value="10">10</option>
@@ -95,7 +96,7 @@ export default function SearchPage() {
                             id="go"
                             onClick={doSearch}
                             disabled={loading}
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 w-full sm:w-auto"
+                            className="btn btn-primary disabled:opacity-50 w-full sm:w-auto"
                         >
                             {loading ? "Searching…" : "Search"}
                         </button>
@@ -122,7 +123,7 @@ export default function SearchPage() {
                                 )}&limit=${encodeURIComponent(
                                     Math.max(10, parseInt(k, 10) || 10)
                                 )}`}
-                                className="text-sm text-blue-600 mr-2"
+                                className="text-sm accent-text mr-2"
                             >
                                 Open full list
                             </Link>
