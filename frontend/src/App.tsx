@@ -1,9 +1,8 @@
-import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider, Helmet } from "react-helmet-async";
-import SearchPage from "./pages/SearchPage";
-import BrowsePage from "./pages/BrowsePage";
+import { Helmet, HelmetProvider } from "react-helmet-async";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import ThemeSelector from "./components/ThemeSelector";
+import BrowsePage from "./pages/BrowsePage";
+import SearchPage from "./pages/SearchPage";
 
 export default function App() {
     return (
@@ -20,7 +19,7 @@ export default function App() {
                     <div className="max-w-3xl mx-auto px-4 py-6">
                         <header className="mb-6">
                             <h1 className="text-3xl font-semibold mb-2">
-                                🪨Heritage Sites Finder
+                                🪨Movie Filming Locations Finder
                             </h1>
                             <p
                                 className="text-sm mb-2"
