@@ -19,7 +19,7 @@ export default function App() {
                     <div className="max-w-3xl mx-auto px-4 py-6">
                         <header className="mb-6">
                             <h1 className="text-3xl font-semibold mb-2">
-                                🪨Movie Filming Locations Finder
+                                🪨🎬Movie Filming Locations Finder
                             </h1>
                             <p
                                 className="text-sm mb-2"
