@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import ResultsCard from "../components/ResultsCard";
-import { Helmet } from "react-helmet-async";
 
 function qs(key: string, fallback?: string) {
     const params = new URLSearchParams(location.search);
@@ -121,27 +123,28 @@ export default function BrowsePage() {
                 >
                     Per page:
                 </label>
-                <select
+                <Select
                     value={String(limit)}
                     onChange={(e) =>
                         onLimitChange(parseInt(e.target.value, 10) || limit)
                     }
-                    className="ml-2 border rounded px-2"
+                    className="ml-2"
                 >
                     {[10, 20, 50, 100].map((n) => (
                         <option key={n} value={String(n)}>
                             {n}
                         </option>
                     ))}
-                </select>
+                </Select>
 
-                <button
-                    className="btn ml-3"
+                <Button
+                    className="ml-3"
                     onClick={toggleShuffle}
                     aria-pressed={shuffleMode}
+                    variant={shuffleMode ? undefined : "outline"}
                 >
                     {shuffleMode ? "Shuffle: ON" : "Shuffle: OFF"}
-                </button>
+                </Button>
             </div>
 
             <div id="list" className="space-y-2">
@@ -157,19 +160,18 @@ export default function BrowsePage() {
                     {Math.min(total, offset + limit)} of {total}
                 </div>
                 <div className="space-x-2">
-                    <button
-                        className="btn"
+                    <Button
                         onClick={() => {
                             const n = Math.max(0, offset - limit);
                             setOffset(n);
                             loadPage(n);
                         }}
                         disabled={offset === 0}
+                        variant="outline"
                     >
                         Prev
-                    </button>
-                    <button
-                        className="btn"
+                    </Button>
+                    <Button
                         onClick={() => {
                             const n = offset + limit;
                             if (n < total) {
@@ -178,9 +180,10 @@ export default function BrowsePage() {
                             }
                         }}
                         disabled={offset + limit >= total}
+                        variant="outline"
                     >
                         Next
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

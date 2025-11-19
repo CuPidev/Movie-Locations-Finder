@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useMemo, useState } from "react";
 
 const MIN_SHOW_MORE_CHARS = 220;
@@ -36,9 +38,6 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
             ? fullText.slice(0, maxLen - 1) + "…"
             : fullText;
     const shouldHaveToggle = true;
-    // fullText &&
-    // (fullText.length > shortText.length ||
-    //     fullText.length >= MIN_SHOW_MORE_CHARS);
     const [expanded, setExpanded] = useState(false);
 
     const displayedHtml = useMemo(() => {
@@ -46,16 +45,16 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
     }, [expanded, fullText, shortText, query]);
 
     return (
-        <article
+        <Card
             className={"result" + (expanded ? " expanded" : "")}
             tabIndex={0}
             aria-labelledby={item.id ? `title-${item.id}` : undefined}
         >
-            <div className="result-header">
+            <div className="result-header flex items-center justify-between mb-2">
                 <div>
                     <div
                         id={item.id ? `title-${item.id}` : undefined}
-                        className="result-title"
+                        className="result-title font-semibold text-lg"
                         dangerouslySetInnerHTML={{
                             __html: highlightText(
                                 item.title || "(no title)",
@@ -64,38 +63,39 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
                         }}
                     />
                 </div>
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                    }}
-                >
+                <div className="flex items-center gap-2">
                     {item.country && (
-                        <span className="country-badge">{item.country}</span>
+                        <span className="country-badge bg-muted px-2 py-0.5 rounded text-xs">
+                            {item.country}
+                        </span>
                     )}
                     {typeof item.score === "number" && (
-                        <span className="score">[{item.score.toFixed(3)}]</span>
+                        <span className="score text-xs text-muted-foreground">
+                            [{item.score.toFixed(3)}]
+                        </span>
                     )}
                 </div>
             </div>
 
             <p
-                className="description"
+                className="description mb-2"
                 dangerouslySetInnerHTML={{ __html: displayedHtml }}
             />
 
-            <div className="meta">{item.id ? `id: ${item.id}` : ""}</div>
+            <div className="meta text-xs text-muted-foreground mb-2">
+                {item.id ? `id: ${item.id}` : ""}
+            </div>
 
             {shouldHaveToggle && (
-                <button
+                <Button
                     type="button"
-                    className="show-more"
+                    variant="outline"
+                    className="show-more px-3 py-1 text-xs"
                     onClick={() => setExpanded((s) => !s)}
                 >
                     {expanded ? "Show less" : "Show more"}
-                </button>
+                </Button>
             )}
-        </article>
+        </Card>
     );
 }

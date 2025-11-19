@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import ResultsCard from "../components/ResultsCard";
 
 export default function SearchPage() {
@@ -18,7 +23,7 @@ export default function SearchPage() {
     useEffect(() => {
         try {
             localStorage.setItem("hsf:k", k);
-        } catch (e) { }
+        } catch (e) {}
     }, [k]);
 
     async function doSearch() {
@@ -27,7 +32,9 @@ export default function SearchPage() {
         setLoading(true);
         try {
             const res = await fetch(
-                `/api/search?q=${encodeURIComponent(tq)}&k=${encodeURIComponent(k)}`
+                `/api/search?q=${encodeURIComponent(tq)}&k=${encodeURIComponent(
+                    k
+                )}`
             );
             if (!res.ok) {
                 setResults([]);
@@ -67,40 +74,40 @@ export default function SearchPage() {
 
                 <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
                     <div className="flex items-center gap-2 w-full">
-                        <input
+                        <Input
                             id="q"
                             value={q}
                             onChange={(e) => setQ(e.target.value)}
                             type="text"
                             autoFocus
                             placeholder="type here e.g. old castle"
-                            className="border-2 rounded px-3 h-10 flex-1 min-w-0 focus:outline-none shadow-sm"
+                            className="flex-1 min-w-0"
                         />
-                        <label htmlFor="k" className="sr-only">
+                        <Label htmlFor="k" className="sr-only">
                             Results
-                        </label>
-                        <select
+                        </Label>
+                        <Select
                             id="k"
                             value={k}
                             onChange={(e) => setK(e.target.value)}
-                            className="border-2 rounded px-2 h-10 w-20 focus:outline-none shadow-sm"
+                            className="w-20"
                         >
                             <option value="5">5</option>
                             <option value="10">10</option>
                             <option value="20">20</option>
                             <option value="50">50</option>
-                        </select>
+                        </Select>
                     </div>
 
                     <div className="w-full sm:w-auto">
-                        <button
+                        <Button
                             id="go"
                             onClick={doSearch}
                             disabled={loading}
-                            className="btn btn-primary disabled:opacity-50 w-full sm:w-auto"
+                            className="w-full sm:w-auto"
                         >
                             {loading ? "Searching…" : "Search"}
-                        </button>
+                        </Button>
                     </div>
 
                     <div className="flex items-center">

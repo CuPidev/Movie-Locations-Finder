@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { useEffect, useState } from "react";
 
 const THEMES = [
     { id: "teal", label: "Teal" },
@@ -54,11 +56,11 @@ export default function ThemeSelector() {
 
     return (
         <span className="inline-flex items-center gap-2">
-            <select
+            <Select
                 id="theme-select"
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
-                className="ml-2 border rounded px-2 py-1 text-sm"
+                className="ml-2 text-sm"
                 aria-label="Accent color"
             >
                 {THEMES.map((t) => (
@@ -66,9 +68,9 @@ export default function ThemeSelector() {
                         {t.label}
                     </option>
                 ))}
-            </select>
+            </Select>
 
-            <button
+            <Button
                 aria-pressed={mode === "dark"}
                 onClick={() =>
                     setMode((m) => (m === "dark" ? "light" : "dark"))
@@ -78,10 +80,11 @@ export default function ThemeSelector() {
                         ? "Switch to light mode"
                         : "Switch to dark mode"
                 }
-                className="ml-1 px-2 py-1 border rounded text-sm"
+                className="ml-1 px-2 py-1 text-sm"
+                variant={mode === "dark" ? undefined : "outline"}
             >
                 {mode === "dark" ? "🌙 Dark" : "☀️ Light"}
-            </button>
+            </Button>
         </span>
     );
 }

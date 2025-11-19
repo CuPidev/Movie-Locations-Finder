@@ -10,10 +10,10 @@ export default function App() {
             <BrowserRouter>
                 <div className="min-h-screen">
                     <Helmet>
-                        <title>Heritage Sites Finder</title>
+                        <title>Movie Filming Locations Finder</title>
                         <meta
                             name="description"
-                            content="Search UNESCO World Heritage sites"
+                            content="Movie Filming Locations Finder"
                         />
                     </Helmet>
                     <div className="max-w-3xl mx-auto px-4 py-6">
