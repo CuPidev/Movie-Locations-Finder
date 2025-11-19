@@ -1,5 +1,11 @@
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ShadcnDemoButton } from "./components/ShadcnDemoButton";
+import { ShadcnDemoCard } from "./components/ShadcnDemoCard";
+import { ShadcnDemoForm } from "./components/ShadcnDemoForm";
+import { ShadcnDemoSwitch } from "./components/ShadcnDemoSwitch";
+import { ShadcnInfoCard } from "./components/ShadcnInfoCard";
+import { ShadcnModernDemo } from "./components/ShadcnModernDemo";
 import ThemeSelector from "./components/ThemeSelector";
 import BrowsePage from "./pages/BrowsePage";
 import SearchPage from "./pages/SearchPage";
@@ -17,6 +23,12 @@ export default function App() {
                         />
                     </Helmet>
                     <div className="max-w-3xl mx-auto px-4 py-6">
+                        <ShadcnModernDemo />
+                        <ShadcnDemoSwitch />
+                        <ShadcnDemoForm />
+                        <ShadcnDemoButton />
+                        <ShadcnDemoCard />
+                        <ShadcnInfoCard />
                         <header className="mb-6">
                             <h1 className="text-3xl font-semibold mb-2">
                                 🪨🎬Movie Filming Locations Finder
