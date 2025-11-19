@@ -27,6 +27,11 @@ yarn install
 yarn build
 ```
 
+-   Scrape the date
+```bash
+python ./crawler/crawler.py
+```
+
 -   Return to the main dir and run the app
 
 ```bash
