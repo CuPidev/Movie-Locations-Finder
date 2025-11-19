@@ -27,7 +27,7 @@ venv.bak/
 # Pytest cache
 .pytest_cache/
 .cache/
-
+solr*
 # Coverage and reports
 .coverage
 coverage.xml

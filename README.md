@@ -40,3 +40,56 @@ The app will be available at 127.0.0.1:5000 by default
 
 Sample movie location data in movie_locations.json \
 Crawler for movie locations com in ./crawler dir
+
+## Apache Solr Setup
+
+This project uses Apache Solr for search functionality. The Solr core is named `movies`.
+
+### Running Solr Locally
+
+**Option 1: Using Docker (Recommended)**
+
+```bash
+docker-compose up -d
+```
+
+**Option 2: Manual Installation**
+
+```bash
+# Set JAVA_HOME (Windows PowerShell)
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-17.0.11.9-hotspot"
+
+# Start Solr
+cd solr-9.10.0\bin
+.\solr.cmd start
+
+# Create the movies core (first time only)
+.\solr.cmd create -c movies
+```
+
+### Indexing Data
+
+After Solr is running:
+
+```bash
+python index_data.py
+```
+
+### Solr Admin UI
+
+`http://localhost:8983/solr/`
+
+### VPS Deployment
+
+The GitHub Actions workflow automatically sets up Solr, creates the `movies` core, and indexes data. See `deployment/DEPLOYMENT.md` for details.
+
+### Troubleshooting
+
+**No search results?**
+```bash
+curl "http://localhost:8983/solr/movies/select?q=*:*&rows=0"
+```
+
+**Solr not starting?**
+- Ensure Java 11+ is installed: `java -version`
+- Check port 8983 is available

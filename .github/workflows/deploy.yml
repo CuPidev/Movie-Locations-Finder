@@ -53,7 +53,7 @@ jobs:
 
             - name: Create tarball
               run: |
-                  tar -czf /tmp/repo_deploy.tar.gz --exclude='.git' --exclude='.venv' --exclude='data' .
+                  tar -czf /tmp/repo_deploy.tar.gz --exclude='.git' --exclude='.venv' --exclude='data' --exclude='solr-9.10.0' .
                   echo "Created /tmp/repo_deploy.tar.gz (size: $(ls -lh /tmp/repo_deploy.tar.gz | awk '{print $5}'))"
 
             - name: Copy tarball to VPS (password auth)
@@ -82,10 +82,58 @@ jobs:
                     sudo mkdir -p "$DEPLOY_PATH"
                     sudo tar -xzf /tmp/repo_deploy.tar.gz -C "$DEPLOY_PATH"
                     sudo rm -f /tmp/repo_deploy.tar.gz
+                    
+                    # Setup Solr
+                    echo "=========================================" 
+                    echo "Setting up Apache Solr..."
+                    echo "========================================="
+                    if [ -f "$DEPLOY_PATH/deployment/setup_solr_vps.sh" ]; then
+                      chmod +x "$DEPLOY_PATH/deployment/setup_solr_vps.sh"
+                      cd "$DEPLOY_PATH/deployment"
+                      sudo bash setup_solr_vps.sh
+                    else
+                      echo "WARNING: Solr setup script not found, skipping Solr setup"
+                    fi
+                    
+                    # Install Python dependencies
+                    echo "========================================="
+                    echo "Installing Python dependencies..."
+                    echo "========================================="
                     if [ ! -d "$DEPLOY_PATH/.venv" ]; then python3 -m venv "$DEPLOY_PATH/.venv"; fi
                     . "$DEPLOY_PATH/.venv/bin/activate"
                     pip install --upgrade pip
                     pip install -r "$DEPLOY_PATH/requirements.txt"
+                    
+                    # Index data into Solr
+                    echo "========================================="
+                    echo "Indexing data into Solr..."
+                    echo "========================================="
+                    # Wait for Solr to be ready
+                    for i in {1..30}; do
+                      if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS" > /dev/null 2>&1; then
+                        echo "Solr is ready"
+                        break
+                      fi
+                      if [ $i -eq 30 ]; then
+                        echo "ERROR: Solr is not responding after 30 seconds"
+                        exit 1
+                      fi
+                      sleep 1
+                    done
+                    
+                    # Run indexing
+                    cd "$DEPLOY_PATH"
+                    python index_data.py || {
+                      echo "ERROR: Data indexing failed"
+                      exit 1
+                    }
+                    
+                    # Verify indexing
+                    DOC_COUNT=$(curl -s "http://localhost:8983/solr/movies/select?q=*:*&rows=0" | grep -oP '"numFound":\K\d+' || echo "0")
+                    echo "Indexed documents: $DOC_COUNT"
+                    if [ "$DOC_COUNT" -eq 0 ]; then
+                      echo "WARNING: No documents were indexed!"
+                    fi
                     sudo systemctl restart heritage
                     # trigger the indexer service to rebuild the enriched index (best-effort)
                     # requires the deploy user to have NOPASSWD sudo for starting the unit, otherwise this will be ignored

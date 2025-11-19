@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 const MIN_SHOW_MORE_CHARS = 220;
 
@@ -30,15 +30,15 @@ function highlightText(text: string, query?: string) {
 }
 
 export default function ResultsCard({ item, query, maxLen = 800 }: any) {
-    const fullText: string = item.description || "";
-    const shortText =
+    const fullText: string = item.content || "";
+    const shortText: string =
         fullText.length > maxLen
             ? fullText.slice(0, maxLen - 1) + "…"
             : fullText;
-    const shouldHaveToggle =
-        fullText &&
-        (fullText.length > shortText.length ||
-            fullText.length >= MIN_SHOW_MORE_CHARS);
+    const shouldHaveToggle = true;
+    // fullText &&
+    // (fullText.length > shortText.length ||
+    //     fullText.length >= MIN_SHOW_MORE_CHARS);
     const [expanded, setExpanded] = useState(false);
 
     const displayedHtml = useMemo(() => {
@@ -58,7 +58,7 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
                         className="result-title"
                         dangerouslySetInnerHTML={{
                             __html: highlightText(
-                                item.name || "(no title)",
+                                item.title || "(no title)",
                                 query
                             ),
                         }}

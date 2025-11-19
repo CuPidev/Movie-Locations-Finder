@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import ResultsCard from "../components/ResultsCard";
-import { Helmet } from "react-helmet-async";
 
 export default function SearchPage() {
     const [q, setQ] = useState("");
@@ -18,7 +18,7 @@ export default function SearchPage() {
     useEffect(() => {
         try {
             localStorage.setItem("hsf:k", k);
-        } catch (e) {}
+        } catch (e) { }
     }, [k]);
 
     async function doSearch() {
@@ -27,14 +27,15 @@ export default function SearchPage() {
         setLoading(true);
         try {
             const res = await fetch(
-                `/search?q=${encodeURIComponent(tq)}&k=${encodeURIComponent(k)}`
+                `/api/search?q=${encodeURIComponent(tq)}&k=${encodeURIComponent(k)}`
             );
             if (!res.ok) {
                 setResults([]);
                 return;
             }
             const data = await res.json();
-            setResults(Array.isArray(data) ? data : []);
+            // API returns {results: [...]}
+            setResults(Array.isArray(data.results) ? data.results : []);
         } catch (err) {
             setResults([]);
         } finally {
