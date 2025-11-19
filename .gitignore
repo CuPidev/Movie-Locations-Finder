@@ -27,7 +27,8 @@ venv.bak/
 # Pytest cache
 .pytest_cache/
 .cache/
-solr*
+# Solr installation directory (but not deployment files)
+solr-*/
 # Coverage and reports
 .coverage
 coverage.xml
