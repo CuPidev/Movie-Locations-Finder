@@ -46,7 +46,8 @@ echo "[3/8] Checking Solr installation..."
 SOLR_ARCHIVE="solr-$SOLR_VERSION.tgz"
 SOLR_URL="https://archive.apache.org/dist/solr/solr/$SOLR_VERSION/$SOLR_ARCHIVE"
 
-if [ ! -d "$SOLR_DIR" ]; then
+# Check if Solr is properly installed by verifying the binary exists
+if [ ! -f "$SOLR_DIR/bin/solr" ]; then
     echo "Downloading Solr $SOLR_VERSION..."
     cd /tmp
     if [ ! -f "$SOLR_ARCHIVE" ]; then
