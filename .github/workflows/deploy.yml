@@ -88,7 +88,7 @@ jobs:
                     echo "Setting up Apache Solr..."
                     echo "========================================="
                     if [ -f "$DEPLOY_PATH/deployment/setup_solr_vps.sh" ]; then
-                      chmod +x "$DEPLOY_PATH/deployment/setup_solr_vps.sh"
+                      sudo chmod +x "$DEPLOY_PATH/deployment/setup_solr_vps.sh"
                       cd "$DEPLOY_PATH/deployment"
                       sudo bash setup_solr_vps.sh
                     else
