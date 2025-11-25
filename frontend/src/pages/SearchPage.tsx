@@ -59,7 +59,11 @@ export default function SearchPage() {
             <Box>
                 <Box mb={4} display="flex" justifyContent="center">
                     <Link to="/browse?shuffle=1">
-                        <Button colorScheme="teal" variant="solid">
+                        <Button
+                            bg="var(--accent)"
+                            color="var(--button-text)"
+                            _hover={{ bg: "var(--accent-700)" }}
+                        >
                             I want to browse instead
                         </Button>
                     </Link>
@@ -98,8 +102,9 @@ export default function SearchPage() {
                         id="go"
                         onClick={doSearch}
                         disabled={loading}
-                        colorScheme="teal"
-                        variant="solid"
+                        bg="var(--accent)"
+                        color="var(--button-text)"
+                        _hover={{ bg: "var(--accent-700)" }}
                     >
                         {loading ? "Searching…" : "Search"}
                     </Button>

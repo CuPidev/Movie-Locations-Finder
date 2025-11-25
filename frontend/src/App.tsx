@@ -21,6 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import ThemeSelector from "./components/ThemeSelector";
 import BrowsePage from "./pages/BrowsePage";
 import SearchPage from "./pages/SearchPage";
 
@@ -30,10 +31,15 @@ export default function App() {
         <HelmetProvider>
             <BrowserRouter>
                 <ChakraProvider>
-                    <Box minH="100vh" bg="gray.50">
+                    <Box minH="100vh">
                         <Box maxW="3xl" mx="auto" px={4} py={6}>
                             {/* Chakra UI Demo Section */}
-                            <Card mb={6} boxShadow="md">
+                            <Card
+                                mb={6}
+                                boxShadow="md"
+                                bg="var(--card-bg)"
+                                borderColor="var(--card-border)"
+                            >
                                 <CardHeader fontWeight="bold" fontSize="xl">
                                     Chakra UI Demo Card
                                 </CardHeader>
@@ -43,14 +49,15 @@ export default function App() {
                                             placeholder="Type something..."
                                             size="md"
                                             mb={2}
-                                            bg="white"
-                                            color="gray.800"
-                                            borderColor="teal.400"
+                                            bg="var(--input-bg)"
+                                            color="var(--text)"
+                                            borderColor="var(--input-border)"
                                         />
                                         <Button
-                                            colorScheme="teal"
                                             mr={2}
-                                            variant="solid"
+                                            bg="var(--accent)"
+                                            color="var(--button-text)"
+                                            _hover={{ bg: "var(--accent-700)" }}
                                         >
                                             Chakra Button
                                         </Button>
@@ -61,9 +68,10 @@ export default function App() {
                                         />
                                     </Box>
                                     <Button
-                                        colorScheme="teal"
                                         mb={4}
-                                        variant="solid"
+                                        bg="var(--accent)"
+                                        color="var(--button-text)"
+                                        _hover={{ bg: "var(--accent-700)" }}
                                         onClick={() =>
                                             toast({
                                                 title: "Chakra Toast Demo!",
@@ -78,7 +86,7 @@ export default function App() {
                                     >
                                         Show Toast
                                     </Button>
-                                    <Tabs variant="enclosed" colorScheme="teal">
+                                    <Tabs variant="enclosed">
                                         <TabList>
                                             <Tab>Tab 1</Tab>
                                             <Tab>Tab 2</Tab>
@@ -109,12 +117,12 @@ export default function App() {
                                     as="h1"
                                     fontSize="3xl"
                                     fontWeight="semibold"
-                                    color="teal.600"
+                                    color="var(--accent)"
                                     mb={2}
                                 >
                                     🪨🎬Movie Filming Locations Finder
                                 </Box>
-                                <Box fontSize="sm" mb={2} color="red.500">
+                                <Box fontSize="sm" mb={2} color="var(--muted)">
                                     Search UNESCO World Heritage sites by
                                     keyword.
                                 </Box>
@@ -122,17 +130,16 @@ export default function App() {
                                     mt={3}
                                     mb={4}
                                     fontSize="sm"
-                                    color="gray.500"
+                                    color="var(--muted)"
                                 >
-                                    Theme:{" "}
-                                    <Button size="sm">ThemeSelector</Button>
+                                    Theme: <ThemeSelector />
                                 </Box>
                                 <Box mt={3}>
                                     <Box
                                         fontSize="sm"
                                         fontWeight="medium"
                                         mb={2}
-                                        color="gray.500"
+                                        color="var(--muted)"
                                     >
                                         Authors — Team 19
                                     </Box>
@@ -140,7 +147,7 @@ export default function App() {
                                         as="ul"
                                         pl={5}
                                         fontSize="sm"
-                                        color="gray.500"
+                                        color="var(--muted)"
                                     >
                                         <Box as="li">Mateusz Cupryniak</Box>
                                         <Box as="li">František Vlček</Box>

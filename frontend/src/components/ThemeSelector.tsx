@@ -61,9 +61,9 @@ export default function ThemeSelector() {
                 onChange={(e) => setTheme(e.target.value)}
                 className="ml-2 text-sm"
                 aria-label="Accent color"
-                bg="white"
-                color="gray.800"
-                borderColor="teal.400"
+                bg="var(--input-bg)"
+                color="var(--text)"
+                borderColor="var(--input-border)"
             >
                 {THEMES.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -83,8 +83,9 @@ export default function ThemeSelector() {
                         : "Switch to dark mode"
                 }
                 className="ml-1 px-2 py-1 text-sm"
-                colorScheme="teal"
-                variant="solid"
+                bg="var(--accent)"
+                color="var(--button-text)"
+                _hover={{ bg: "var(--accent-700)" }}
             >
                 {mode === "dark" ? "🌙 Dark" : "☀️ Light"}
             </Button>

@@ -48,6 +48,11 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
             className={"result" + (expanded ? " expanded" : "")}
             tabIndex={0}
             aria-labelledby={item.id ? `title-${item.id}` : undefined}
+            position="relative"
+            overflow="hidden"
+            maxH={expanded ? "2000px" : "14rem"}
+            transitionProperty="max-height"
+            transitionDuration="220ms"
         >
             <div className="result-header flex items-center justify-between mb-2">
                 <div>
@@ -90,6 +95,11 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
                     type="button"
                     variant="outline"
                     className="show-more px-3 py-1 text-xs"
+                    position="absolute"
+                    right={3}
+                    bottom={3}
+                    borderColor="var(--accent)"
+                    color="var(--accent-700)"
                     onClick={() => setExpanded((s) => !s)}
                 >
                     {expanded ? "Show less" : "Show more"}

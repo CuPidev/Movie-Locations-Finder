@@ -100,7 +100,9 @@ export default function BrowsePage() {
             <Box mb={3}>
                 <Link to="/">
                     <Button
-                        variant="outline"
+                        bg="var(--accent)"
+                        color="var(--button-text)"
+                        _hover={{ bg: "var(--accent-700)" }}
                         leftIcon={<span>&larr;</span>}
                         size="sm"
                     >
@@ -115,7 +117,7 @@ export default function BrowsePage() {
                 gap={3}
                 mb={4}
             >
-                <Box as="label" fontSize="sm" mr={2} color="gray.500">
+                <Box as="label" fontSize="sm" mr={2} color="var(--muted)">
                     Per page:
                 </Box>
                 <Select
@@ -135,7 +137,16 @@ export default function BrowsePage() {
                     ml={3}
                     onClick={toggleShuffle}
                     aria-pressed={shuffleMode}
-                    variant={shuffleMode ? undefined : "outline"}
+                    bg={shuffleMode ? "var(--accent)" : "transparent"}
+                    color={shuffleMode ? "var(--button-text)" : "var(--text)"}
+                    borderColor={
+                        shuffleMode ? undefined : "var(--input-border)"
+                    }
+                    _hover={
+                        shuffleMode
+                            ? { bg: "var(--accent-700)" }
+                            : { bg: "var(--accent-50)" }
+                    }
                 >
                     {shuffleMode ? "Shuffle: ON" : "Shuffle: OFF"}
                 </Button>
@@ -154,7 +165,7 @@ export default function BrowsePage() {
                 alignItems="center"
                 justifyContent="space-between"
             >
-                <Box fontSize="sm" color="gray.500">
+                <Box fontSize="sm" color="var(--muted)">
                     Showing {Math.min(total, offset + 1)}-
                     {Math.min(total, offset + limit)} of {total}
                 </Box>
@@ -167,6 +178,8 @@ export default function BrowsePage() {
                         }}
                         disabled={offset === 0}
                         variant="outline"
+                        borderColor="var(--input-border)"
+                        color="var(--text)"
                     >
                         Prev
                     </Button>
@@ -180,6 +193,8 @@ export default function BrowsePage() {
                         }}
                         disabled={offset + limit >= total}
                         variant="outline"
+                        borderColor="var(--input-border)"
+                        color="var(--text)"
                     >
                         Next
                     </Button>
