@@ -27,6 +27,7 @@ export default function BrowsePage() {
     );
     const [total, setTotal] = useState(0);
     const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         loadPage(offset, false);
@@ -49,7 +50,8 @@ export default function BrowsePage() {
         const useShuffle = shuffle || shuffleMode;
         if (useShuffle) params.set("shuffle", "1");
         if (q) params.set("q", q);
-        const url = `/browse?${params.toString()}`;
+        const url = `/api/browse?${params.toString()}`;
+        setLoading(true);
         try {
             const res = await fetch(url);
             if (!res.ok) {
@@ -62,6 +64,8 @@ export default function BrowsePage() {
             setOffset(start);
         } catch (err) {
             setItems([]);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -137,7 +141,8 @@ export default function BrowsePage() {
                 </Button>
             </Box>
             <Box id="list">
-                {items.length === 0 && <Box>No items</Box>}
+                {loading && <Box>Loading…</Box>}
+                {!loading && items.length === 0 && <Box>No items</Box>}
                 {items.map((it, i) => (
                     <ResultsCard key={i} item={it} query={q} maxLen={400} />
                 ))}

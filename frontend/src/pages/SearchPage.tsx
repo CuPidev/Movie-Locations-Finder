@@ -59,7 +59,7 @@ export default function SearchPage() {
             <Box>
                 <Box mb={4} display="flex" justifyContent="center">
                     <Link to="/browse?shuffle=1">
-                        <Button variant="outline">
+                        <Button colorScheme="teal" variant="solid">
                             I want to browse instead
                         </Button>
                     </Link>
@@ -79,6 +79,9 @@ export default function SearchPage() {
                         autoFocus
                         placeholder="type here e.g. old castle"
                         flex={1}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") doSearch();
+                        }}
                     />
                     <Select
                         id="k"
@@ -91,7 +94,13 @@ export default function SearchPage() {
                         <option value="20">20</option>
                         <option value="50">50</option>
                     </Select>
-                    <Button id="go" onClick={doSearch} disabled={loading}>
+                    <Button
+                        id="go"
+                        onClick={doSearch}
+                        disabled={loading}
+                        colorScheme="teal"
+                        variant="solid"
+                    >
                         {loading ? "Searching…" : "Search"}
                     </Button>
                 </Box>

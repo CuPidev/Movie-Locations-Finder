@@ -43,8 +43,15 @@ export default function App() {
                                             placeholder="Type something..."
                                             size="md"
                                             mb={2}
+                                            bg="white"
+                                            color="gray.800"
+                                            borderColor="teal.400"
                                         />
-                                        <Button colorScheme="teal" mr={2}>
+                                        <Button
+                                            colorScheme="teal"
+                                            mr={2}
+                                            variant="solid"
+                                        >
                                             Chakra Button
                                         </Button>
                                         <Switch
@@ -54,8 +61,9 @@ export default function App() {
                                         />
                                     </Box>
                                     <Button
-                                        colorScheme="orange"
+                                        colorScheme="teal"
                                         mb={4}
+                                        variant="solid"
                                         onClick={() =>
                                             toast({
                                                 title: "Chakra Toast Demo!",
@@ -64,7 +72,7 @@ export default function App() {
                                                 status: "success",
                                                 duration: 3000,
                                                 isClosable: true,
-                                                position: "top-center",
+                                                position: "top",
                                             })
                                         }
                                     >
@@ -101,11 +109,12 @@ export default function App() {
                                     as="h1"
                                     fontSize="3xl"
                                     fontWeight="semibold"
+                                    color="teal.600"
                                     mb={2}
                                 >
                                     🪨🎬Movie Filming Locations Finder
                                 </Box>
-                                <Box fontSize="sm" mb={2} color="gray.500">
+                                <Box fontSize="sm" mb={2} color="red.500">
                                     Search UNESCO World Heritage sites by
                                     keyword.
                                 </Box>

@@ -23,6 +23,38 @@ class Indexer:
     def search(self, query: str, **kwargs):
         # Search across title and content fields
         # Use Solr's query syntax to search multiple fields
-        solr_query = f'title:({query}) OR content:({query})'
+        solr_query = f"title:({query}) OR content:({query})"
         return self.solr.search(solr_query, **kwargs)
 
+    def browse(
+        self,
+        query: str = None,
+        offset: int = 0,
+        limit: int = 10,
+        shuffle: bool = False,
+        **kwargs,
+    ):
+        """Browse documents with pagination and optional shuffle.
+
+        Returns a Solr results object.
+        """
+        if query:
+            solr_query = f"title:({query}) OR content:({query})"
+        else:
+            solr_query = "*:*"
+
+        params = kwargs.copy()
+        params.setdefault("start", offset)
+        params.setdefault("rows", limit)
+
+        if shuffle:
+            # Simple shuffle using a random seed; Solr supports random_<seed>
+            import random
+
+            seed = random.randint(1, 1000000)
+            params.setdefault("sort", f"random_{seed} asc")
+        else:
+            # Default sort by score desc when available
+            params.setdefault("sort", "score desc")
+
+        return self.solr.search(solr_query, **params)

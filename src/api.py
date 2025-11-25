@@ -2,11 +2,11 @@
 
 import os
 from typing import Optional
-from flask import Flask, send_from_directory, request
+
+from flask import Flask, request, send_from_directory
 from flask_cors import CORS
 
 from src.indexer import Indexer
-
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 
@@ -25,7 +25,7 @@ def create_app(static_folder: Optional[str] = None):
         print(f"[DEBUG] Received query: '{query}'")
         if not query:
             return {"results": []}
-        
+
         indexer = Indexer()
         try:
             results = indexer.search(query)
@@ -40,24 +40,27 @@ def create_app(static_folder: Optional[str] = None):
         except Exception as e:
             print(f"Search failed: {e}")
             import traceback
+
             traceback.print_exc()
             # Fallback to mock data for demonstration if Solr is down
-            return {"results": [
-                {
-                    "id": "mock-1",
-                    "name": "Mock Heritage Site (Solr Unavailable)",
-                    "description": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
-                    "country": "Demo Land",
-                    "score": 1.0
-                },
-                {
-                    "id": "mock-2",
-                    "name": "Another Mock Site",
-                    "description": "Solr integration is implemented, but the server is offline.",
-                    "country": "Test Country",
-                    "score": 0.8
-                }
-            ]}
+            return {
+                "results": [
+                    {
+                        "id": "mock-1",
+                        "name": "Mock Heritage Site (Solr Unavailable)",
+                        "description": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
+                        "country": "Demo Land",
+                        "score": 1.0,
+                    },
+                    {
+                        "id": "mock-2",
+                        "name": "Another Mock Site",
+                        "description": "Solr integration is implemented, but the server is offline.",
+                        "country": "Test Country",
+                        "score": 0.8,
+                    },
+                ]
+            }
 
     @app.route("/", defaults={"path": "index.html"})
     @app.route("/<path:path>")
@@ -66,6 +69,53 @@ def create_app(static_folder: Optional[str] = None):
         if app.static_folder and os.path.exists(os.path.join(app.static_folder, path)):
             return send_from_directory(app.static_folder, path)
         return ("Not Found", 404)
+
+    @app.route("/api/browse")
+    def browse():
+        # Provide simple browsing/pagination endpoint backed by Solr
+        try:
+            offset = int(request.args.get("offset", "0") or "0")
+        except Exception:
+            offset = 0
+        try:
+            limit = int(request.args.get("limit", "10") or "10")
+        except Exception:
+            limit = 10
+        q = request.args.get("q", "")
+        shuffle = request.args.get("shuffle") == "1"
+
+        indexer = Indexer()
+        try:
+            results = indexer.browse(
+                query=q or None, offset=offset, limit=limit, shuffle=shuffle
+            )
+            items = [dict(d) for d in results]
+            total = getattr(results, "hits", len(items))
+            return {"total": total, "items": items}
+        except Exception as e:
+            print(f"Browse failed: {e}")
+            import traceback
+
+            traceback.print_exc()
+            return {
+                "total": 2,
+                "items": [
+                    {
+                        "id": "mock-1",
+                        "title": "Mock Heritage Site (Solr Unavailable)",
+                        "content": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
+                        "country": "Demo Land",
+                        "score": 1.0,
+                    },
+                    {
+                        "id": "mock-2",
+                        "title": "Another Mock Site",
+                        "content": "Solr integration is implemented, but the server is offline.",
+                        "country": "Test Country",
+                        "score": 0.8,
+                    },
+                ],
+            }
 
     return app
 
