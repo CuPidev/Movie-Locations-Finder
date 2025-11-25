@@ -32,20 +32,6 @@ yarn build
 python ./crawler/crawler.py
 ```
 
--   Return to the main dir and run the app
-
-```bash
-cd ..
-python run_api.py
-```
-
-The app will be available at 127.0.0.1:5000 by default
-
-## Structure
-
-Sample movie location data in movie_locations.json \
-Crawler for movie locations com in ./crawler dir
-
 ## Apache Solr Setup
 
 This project uses Apache Solr for search functionality. The Solr core is named `movies`.
@@ -87,6 +73,21 @@ python index_data.py
 ### VPS Deployment
 
 The GitHub Actions workflow automatically sets up Solr, creates the `movies` core, and indexes data. See `deployment/DEPLOYMENT.md` for details.
+
+-   Run the API
+
+```bash
+cd ..
+python run_api.py
+```
+
+The app will be available at 127.0.0.1:5000 by default
+
+## Structure
+
+Sample movie location data in movie_locations.json \
+Crawler for movie locations com in ./crawler dir
+
 
 ### Troubleshooting
 
