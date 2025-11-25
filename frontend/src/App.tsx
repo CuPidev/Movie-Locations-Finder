@@ -21,6 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import chakraTheme from "./chakraTheme";
 import ThemeSelector from "./components/ThemeSelector";
 import BrowsePage from "./pages/BrowsePage";
 import SearchPage from "./pages/SearchPage";
@@ -30,7 +31,7 @@ export default function App() {
     return (
         <HelmetProvider>
             <BrowserRouter>
-                <ChakraProvider>
+                <ChakraProvider theme={chakraTheme}>
                     <Box minH="100vh">
                         <Box maxW="3xl" mx="auto" px={4} py={6}>
                             {/* Chakra UI Demo Section */}
@@ -62,9 +63,18 @@ export default function App() {
                                             Chakra Button
                                         </Button>
                                         <Switch
-                                            colorScheme="teal"
                                             defaultChecked
                                             mr={2}
+                                            sx={{
+                                                "& .chakra-switch__track": {
+                                                    backgroundColor:
+                                                        "var(--accent)",
+                                                },
+                                                "& .chakra-switch__thumb": {
+                                                    backgroundColor:
+                                                        "var(--card-bg)",
+                                                },
+                                            }}
                                         />
                                     </Box>
                                     <Button
