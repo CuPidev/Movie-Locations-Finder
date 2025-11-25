@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Box, Button, Input, Select } from "@chakra-ui/react";
 import ResultsCard from "../components/ResultsCard";
 
 export default function SearchPage() {
@@ -59,94 +56,69 @@ export default function SearchPage() {
                     content="Search UNESCO World Heritage sites"
                 />
             </Helmet>
-            <div>
-                <div className="mb-4 flex justify-center sm:justify-start">
-                    <Link
-                        to="/browse?shuffle=1"
-                        className="inline-flex items-center gap-2 accent-text border px-3 py-2 rounded-lg"
-                        style={{ borderColor: "var(--accent)" }}
-                    >
-                        <span className="font-medium text-sm">
+            <Box>
+                <Box mb={4} display="flex" justifyContent="center">
+                    <Link to="/browse?shuffle=1">
+                        <Button variant="outline">
                             I want to browse instead
-                        </span>
-                    </Link>
-                </div>
-
-                <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                    <div className="flex items-center gap-2 w-full">
-                        <Input
-                            id="q"
-                            value={q}
-                            onChange={(e) => setQ(e.target.value)}
-                            type="text"
-                            autoFocus
-                            placeholder="type here e.g. old castle"
-                            className="flex-1 min-w-0"
-                        />
-                        <Label htmlFor="k" className="sr-only">
-                            Results
-                        </Label>
-                        <Select
-                            id="k"
-                            value={k}
-                            onChange={(e) => setK(e.target.value)}
-                            className="w-20"
-                        >
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                        </Select>
-                    </div>
-
-                    <div className="w-full sm:w-auto">
-                        <Button
-                            id="go"
-                            onClick={doSearch}
-                            disabled={loading}
-                            className="w-full sm:w-auto"
-                        >
-                            {loading ? "Searching…" : "Search"}
                         </Button>
-                    </div>
-
-                    <div className="flex items-center">
-                        <span
-                            id="spinner"
-                            className="spinner ml-2"
-                            style={{
-                                display: loading ? "inline-block" : "none",
-                            }}
-                            aria-hidden="true"
-                        />
-                    </div>
-                </div>
-
-                <div id="results" className="mt-4">
+                    </Link>
+                </Box>
+                <Box
+                    mb={4}
+                    display="flex"
+                    flexDirection={{ base: "column", sm: "row" }}
+                    gap={2}
+                    alignItems="center"
+                >
+                    <Input
+                        id="q"
+                        value={q}
+                        onChange={(e) => setQ(e.target.value)}
+                        type="text"
+                        autoFocus
+                        placeholder="type here e.g. old castle"
+                        flex={1}
+                    />
+                    <Select
+                        id="k"
+                        value={k}
+                        onChange={(e) => setK(e.target.value)}
+                        width="80px"
+                    >
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </Select>
+                    <Button id="go" onClick={doSearch} disabled={loading}>
+                        {loading ? "Searching…" : "Search"}
+                    </Button>
+                </Box>
+                <Box mt={4}>
                     {q && (
-                        <div className="mb-3 flex items-center justify-end">
+                        <Box mb={3} display="flex" justifyContent="flex-end">
                             <Link
                                 to={`/browse?q=${encodeURIComponent(
                                     q
                                 )}&limit=${encodeURIComponent(
                                     Math.max(10, parseInt(k, 10) || 10)
                                 )}`}
-                                className="text-sm accent-text mr-2"
                             >
-                                Open full list
+                                <Button variant="link" size="sm">
+                                    Open full list
+                                </Button>
                             </Link>
-                        </div>
+                        </Box>
                     )}
-
-                    {results.length === 0 && <div>No results</div>}
-
-                    <div className="space-y-3">
+                    {results.length === 0 && <Box>No results</Box>}
+                    <Box>
                         {results.map((r, i) => (
                             <ResultsCard key={i} item={r} query={q} />
                         ))}
-                    </div>
-                </div>
-            </div>
+                    </Box>
+                </Box>
+            </Box>
         </>
     );
 }

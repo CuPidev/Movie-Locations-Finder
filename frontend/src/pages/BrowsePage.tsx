@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { Box, Button, Select } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
@@ -86,7 +85,7 @@ export default function BrowsePage() {
     }
 
     return (
-        <div>
+        <Box>
             <Helmet>
                 <title>Heritage Sites Finder - Browse</title>
                 <meta
@@ -94,41 +93,33 @@ export default function BrowsePage() {
                     content="Browse UNESCO World Heritage sites"
                 />
             </Helmet>
-            <div className="mb-3">
-                <Link
-                    to="/"
-                    className="inline-flex items-center gap-2 accent-text hover:opacity-90"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
+            <Box mb={3}>
+                <Link to="/">
+                    <Button
+                        variant="outline"
+                        leftIcon={<span>&larr;</span>}
+                        size="sm"
                     >
-                        <path d="M15 18l-6-6 6-6"></path>
-                    </svg>
-                    <span className="text-sm font-medium">Back</span>
+                        Back
+                    </Button>
                 </Link>
-            </div>
-
-            <div id="controls" className="flex items-center gap-3 mb-4">
-                <label
-                    className="text-sm mr-2"
-                    style={{ color: "var(--muted)" }}
-                >
+            </Box>
+            <Box
+                id="controls"
+                display="flex"
+                alignItems="center"
+                gap={3}
+                mb={4}
+            >
+                <Box as="label" fontSize="sm" mr={2} color="gray.500">
                     Per page:
-                </label>
+                </Box>
                 <Select
                     value={String(limit)}
                     onChange={(e) =>
                         onLimitChange(parseInt(e.target.value, 10) || limit)
                     }
-                    className="ml-2"
+                    width="80px"
                 >
                     {[10, 20, 50, 100].map((n) => (
                         <option key={n} value={String(n)}>
@@ -136,30 +127,33 @@ export default function BrowsePage() {
                         </option>
                     ))}
                 </Select>
-
                 <Button
-                    className="ml-3"
+                    ml={3}
                     onClick={toggleShuffle}
                     aria-pressed={shuffleMode}
                     variant={shuffleMode ? undefined : "outline"}
                 >
                     {shuffleMode ? "Shuffle: ON" : "Shuffle: OFF"}
                 </Button>
-            </div>
-
-            <div id="list" className="space-y-2">
-                {items.length === 0 && <div>No items</div>}
+            </Box>
+            <Box id="list">
+                {items.length === 0 && <Box>No items</Box>}
                 {items.map((it, i) => (
                     <ResultsCard key={i} item={it} query={q} maxLen={400} />
                 ))}
-            </div>
-
-            <div id="pager" className="mt-4 flex items-center justify-between">
-                <div className="text-sm" style={{ color: "var(--muted)" }}>
+            </Box>
+            <Box
+                id="pager"
+                mt={4}
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+            >
+                <Box fontSize="sm" color="gray.500">
                     Showing {Math.min(total, offset + 1)}-
                     {Math.min(total, offset + limit)} of {total}
-                </div>
-                <div className="space-x-2">
+                </Box>
+                <Box display="flex" gap={2}>
                     <Button
                         onClick={() => {
                             const n = Math.max(0, offset - limit);
@@ -184,8 +178,8 @@ export default function BrowsePage() {
                     >
                         Next
                     </Button>
-                </div>
-            </div>
-        </div>
+                </Box>
+            </Box>
+        </Box>
     );
 }

@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { Button, Select } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
 const THEMES = [
