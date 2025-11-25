@@ -56,16 +56,23 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
         >
             <div className="result-header flex items-center justify-between mb-2">
                 <div>
-                    <div
-                        id={item.id ? `title-${item.id}` : undefined}
-                        className="result-title font-semibold text-lg"
-                        dangerouslySetInnerHTML={{
-                            __html: highlightText(
-                                item.title || "(no title)",
-                                query
-                            ),
-                        }}
-                    />
+                    <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                    >
+                        <div
+                            id={item.id ? `title-${item.id}` : undefined}
+                            className="result-title font-semibold text-lg"
+                            dangerouslySetInnerHTML={{
+                                __html: highlightText(
+                                    item.title || "(no title)",
+                                    query
+                                ),
+                            }}
+                        />
+                    </a>
                 </div>
                 <div className="flex items-center gap-2">
                     {item.country && (
