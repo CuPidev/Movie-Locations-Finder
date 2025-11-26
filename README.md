@@ -99,3 +99,4 @@ curl "http://localhost:8983/solr/movies/select?q=*:*&rows=0"
 **Solr not starting?**
 - Ensure Java 11+ is installed: `java -version`
 - Check port 8983 is available
+Sonar Check test
