@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { Box, Button, Select } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import ResultsCard from "../components/ResultsCard";
-import { Helmet } from "react-helmet-async";
 
 function qs(key: string, fallback?: string) {
     const params = new URLSearchParams(location.search);
@@ -26,6 +27,7 @@ export default function BrowsePage() {
     );
     const [total, setTotal] = useState(0);
     const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         loadPage(offset, false);
@@ -48,7 +50,8 @@ export default function BrowsePage() {
         const useShuffle = shuffle || shuffleMode;
         if (useShuffle) params.set("shuffle", "1");
         if (q) params.set("q", q);
-        const url = `/browse?${params.toString()}`;
+        const url = `/api/browse?${params.toString()}`;
+        setLoading(true);
         try {
             const res = await fetch(url);
             if (!res.ok) {
@@ -61,6 +64,8 @@ export default function BrowsePage() {
             setOffset(start);
         } catch (err) {
             setItems([]);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -84,7 +89,7 @@ export default function BrowsePage() {
     }
 
     return (
-        <div>
+        <Box>
             <Helmet>
                 <title>Heritage Sites Finder - Browse</title>
                 <meta
@@ -92,84 +97,93 @@ export default function BrowsePage() {
                     content="Browse UNESCO World Heritage sites"
                 />
             </Helmet>
-            <div className="mb-3">
-                <Link
-                    to="/"
-                    className="inline-flex items-center gap-2 accent-text hover:opacity-90"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
+            <Box mb={3}>
+                <Link to="/">
+                    <Button
+                        bg="var(--accent)"
+                        color="var(--button-text)"
+                        _hover={{ bg: "var(--accent-700)" }}
+                        leftIcon={<span>&larr;</span>}
+                        size="sm"
                     >
-                        <path d="M15 18l-6-6 6-6"></path>
-                    </svg>
-                    <span className="text-sm font-medium">Back</span>
+                        Back
+                    </Button>
                 </Link>
-            </div>
-
-            <div id="controls" className="flex items-center gap-3 mb-4">
-                <label
-                    className="text-sm mr-2"
-                    style={{ color: "var(--muted)" }}
-                >
+            </Box>
+            <Box
+                id="controls"
+                display="flex"
+                alignItems="center"
+                gap={3}
+                mb={4}
+            >
+                <Box as="label" fontSize="sm" mr={2} color="var(--muted)">
                     Per page:
-                </label>
-                <select
+                </Box>
+                <Select
                     value={String(limit)}
                     onChange={(e) =>
                         onLimitChange(parseInt(e.target.value, 10) || limit)
                     }
-                    className="ml-2 border rounded px-2"
+                    width="80px"
                 >
                     {[10, 20, 50, 100].map((n) => (
                         <option key={n} value={String(n)}>
                             {n}
                         </option>
                     ))}
-                </select>
-
-                <button
-                    className="btn ml-3"
+                </Select>
+                <Button
+                    ml={3}
                     onClick={toggleShuffle}
                     aria-pressed={shuffleMode}
+                    bg={shuffleMode ? "var(--accent)" : "transparent"}
+                    color={shuffleMode ? "var(--button-text)" : "var(--text)"}
+                    borderColor={
+                        shuffleMode ? undefined : "var(--input-border)"
+                    }
+                    _hover={
+                        shuffleMode
+                            ? { bg: "var(--accent-700)" }
+                            : { bg: "var(--accent-50)" }
+                    }
                 >
                     {shuffleMode ? "Shuffle: ON" : "Shuffle: OFF"}
-                </button>
-            </div>
-
-            <div id="list" className="space-y-2">
-                {items.length === 0 && <div>No items</div>}
+                </Button>
+            </Box>
+            <Box id="list">
+                {loading && <Box>Loading…</Box>}
+                {!loading && items.length === 0 && <Box>No items</Box>}
                 {items.map((it, i) => (
                     <ResultsCard key={i} item={it} query={q} maxLen={400} />
                 ))}
-            </div>
-
-            <div id="pager" className="mt-4 flex items-center justify-between">
-                <div className="text-sm" style={{ color: "var(--muted)" }}>
+            </Box>
+            <Box
+                id="pager"
+                mt={4}
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+            >
+                <Box fontSize="sm" color="var(--muted)">
                     Showing {Math.min(total, offset + 1)}-
                     {Math.min(total, offset + limit)} of {total}
-                </div>
-                <div className="space-x-2">
-                    <button
-                        className="btn"
+                </Box>
+                <Box display="flex" gap={2}>
+                    <Button
                         onClick={() => {
                             const n = Math.max(0, offset - limit);
                             setOffset(n);
                             loadPage(n);
                         }}
                         disabled={offset === 0}
+                        variant="outline"
+                        borderColor="var(--input-border)"
+                        color="var(--text)"
                     >
                         Prev
-                    </button>
-                    <button
-                        className="btn"
+                    </Button>
+                    <Button
                         onClick={() => {
                             const n = offset + limit;
                             if (n < total) {
@@ -178,11 +192,14 @@ export default function BrowsePage() {
                             }
                         }}
                         disabled={offset + limit >= total}
+                        variant="outline"
+                        borderColor="var(--input-border)"
+                        color="var(--text)"
                     >
                         Next
-                    </button>
-                </div>
-            </div>
-        </div>
+                    </Button>
+                </Box>
+            </Box>
+        </Box>
     );
 }

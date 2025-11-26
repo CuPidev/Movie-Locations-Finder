@@ -1,6 +1,4 @@
-"""Small runner to start the Flask app with correct sys.path.
-
-Use when `python -m src.api` fails because the package isn't on sys.path in this environment.
+"""Small runner to start the Flask app from anywhere in the system.
 """
 
 import os

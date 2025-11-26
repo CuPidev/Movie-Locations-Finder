@@ -1,35 +1,101 @@
-# Heritage Sites Finder (UNESCO World Heritage IR project)
+# Movie locations finder Search Engine - MLFSE
 
-Small Information Retrieval (IR) project that fetches UNESCO World Heritage data, builds a TF-IDF index, and provides a tiny CLI to search site descriptions.
+## Quick start
 
-Quick start
+-   Create virtual enviornment for python (or be a gigachad and do it globally)
+-   Install python dependencies
 
--   create a virtual environment and activate it
--   install dependencies: pip install -r requirements.txt
--   run tests: pytest -q
+```bash
+pip install -r requirements.txt
+```
 
-CLI examples
+-   Go into the frontend dir
 
--   Fetch & index (attempts to fetch from configured UNESCO endpoint):
-    python -m src.cli fetch --out data/sites.json
+```bash
+cd ./frontend
+```
 
--   Search an index (or JSON file):
-    python -m src.cli search --json data/sites.json "ancient temple"
+-   Install frontend dependencies
 
-    Run the Flask API and frontend
+```bash
+yarn install
+```
 
-    -   Start the API (from project root with venv active):
-        python -m src.api
+-   Build the frontend
 
-    Open http://127.0.0.1:5000/ in your browser to use the simple frontend.
+```bash
+yarn build
+```
 
-Project layout
+-   Scrape the date
+```bash
+python ./crawler/crawler.py
+```
 
--   `src/fetcher.py` : functions to fetch UNESCO data or load fallback/sample data
--   `src/indexer.py` : TF-IDF indexing and search utilities
--   `src/cli.py` : simple CLI to fetch, index and search
--   `tests/` : unit tests (indexer)
+## Apache Solr Setup
 
-Notes
+This project uses Apache Solr for search functionality. The Solr core is named `movies`.
 
-The project uses scikit-learn's TfidfVectorizer for a compact search index. The fetcher attempts to hit UNESCO's public listing; if the endpoint changes, pass your own JSON file to the CLI.
+### Running Solr Locally
+
+**Option 1: Using Docker (Recommended)**
+
+```bash
+docker-compose up -d
+```
+
+**Option 2: Manual Installation**
+
+```bash
+# Set JAVA_HOME (Windows PowerShell)
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-17.0.11.9-hotspot"
+
+# Start Solr
+cd solr-9.10.0\bin
+.\solr.cmd start
+
+# Create the movies core (first time only)
+.\solr.cmd create -c movies
+```
+
+### Indexing Data
+
+After Solr is running:
+
+```bash
+python index_data.py
+```
+
+### Solr Admin UI
+
+`http://localhost:8983/solr/`
+
+### VPS Deployment
+
+The GitHub Actions workflow automatically sets up Solr, creates the `movies` core, and indexes data. See `deployment/DEPLOYMENT.md` for details.
+
+-   Run the API
+
+```bash
+cd ..
+python run_api.py
+```
+
+The app will be available at 127.0.0.1:5000 by default
+
+## Structure
+
+Sample movie location data in movie_locations.json \
+Crawler for movie locations com in ./crawler dir
+
+
+### Troubleshooting
+
+**No search results?**
+```bash
+curl "http://localhost:8983/solr/movies/select?q=*:*&rows=0"
+```
+
+**Solr not starting?**
+- Ensure Java 11+ is installed: `java -version`
+- Check port 8983 is available

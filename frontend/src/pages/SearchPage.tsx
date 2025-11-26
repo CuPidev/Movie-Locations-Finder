@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import ResultsCard from "../components/ResultsCard";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+
+import { Box, Button, Input, Select } from "@chakra-ui/react";
+import ResultsCard from "../components/ResultsCard";
 
 export default function SearchPage() {
     const [q, setQ] = useState("");
@@ -27,14 +29,17 @@ export default function SearchPage() {
         setLoading(true);
         try {
             const res = await fetch(
-                `/search?q=${encodeURIComponent(tq)}&k=${encodeURIComponent(k)}`
+                `/api/search?q=${encodeURIComponent(tq)}&k=${encodeURIComponent(
+                    k
+                )}`
             );
             if (!res.ok) {
                 setResults([]);
                 return;
             }
             const data = await res.json();
-            setResults(Array.isArray(data) ? data : []);
+            // API returns {results: [...]}
+            setResults(Array.isArray(data.results) ? data.results : []);
         } catch (err) {
             setResults([]);
         } finally {
@@ -51,94 +56,83 @@ export default function SearchPage() {
                     content="Search UNESCO World Heritage sites"
                 />
             </Helmet>
-            <div>
-                <div className="mb-4 flex justify-center sm:justify-start">
-                    <Link
-                        to="/browse?shuffle=1"
-                        className="inline-flex items-center gap-2 accent-text border px-3 py-2 rounded-lg"
-                        style={{ borderColor: "var(--accent)" }}
-                    >
-                        <span className="font-medium text-sm">
+            <Box>
+                <Box mb={4} display="flex" justifyContent="center">
+                    <Link to="/browse?shuffle=1">
+                        <Button
+                            bg="var(--accent)"
+                            color="var(--button-text)"
+                            _hover={{ bg: "var(--accent-700)" }}
+                        >
                             I want to browse instead
-                        </span>
+                        </Button>
                     </Link>
-                </div>
-
-                <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                    <div className="flex items-center gap-2 w-full">
-                        <input
-                            id="q"
-                            value={q}
-                            onChange={(e) => setQ(e.target.value)}
-                            type="text"
-                            autoFocus
-                            placeholder="type here e.g. old castle"
-                            className="border-2 rounded px-3 h-10 flex-1 min-w-0 focus:outline-none shadow-sm"
-                        />
-                        <label htmlFor="k" className="sr-only">
-                            Results
-                        </label>
-                        <select
-                            id="k"
-                            value={k}
-                            onChange={(e) => setK(e.target.value)}
-                            className="border-2 rounded px-2 h-10 w-20 focus:outline-none shadow-sm"
-                        >
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                        </select>
-                    </div>
-
-                    <div className="w-full sm:w-auto">
-                        <button
-                            id="go"
-                            onClick={doSearch}
-                            disabled={loading}
-                            className="btn btn-primary disabled:opacity-50 w-full sm:w-auto"
-                        >
-                            {loading ? "Searching…" : "Search"}
-                        </button>
-                    </div>
-
-                    <div className="flex items-center">
-                        <span
-                            id="spinner"
-                            className="spinner ml-2"
-                            style={{
-                                display: loading ? "inline-block" : "none",
-                            }}
-                            aria-hidden="true"
-                        />
-                    </div>
-                </div>
-
-                <div id="results" className="mt-4">
+                </Box>
+                <Box
+                    mb={4}
+                    display="flex"
+                    flexDirection={{ base: "column", sm: "row" }}
+                    gap={2}
+                    alignItems="center"
+                >
+                    <Input
+                        id="q"
+                        value={q}
+                        onChange={(e) => setQ(e.target.value)}
+                        type="text"
+                        autoFocus
+                        placeholder="type here e.g. old castle"
+                        flex={1}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") doSearch();
+                        }}
+                    />
+                    <Select
+                        id="k"
+                        value={k}
+                        onChange={(e) => setK(e.target.value)}
+                        width="80px"
+                    >
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </Select>
+                    <Button
+                        id="go"
+                        onClick={doSearch}
+                        disabled={loading}
+                        bg="var(--accent)"
+                        color="var(--button-text)"
+                        _hover={{ bg: "var(--accent-700)" }}
+                    >
+                        {loading ? "Searching…" : "Search"}
+                    </Button>
+                </Box>
+                <Box mt={4}>
                     {q && (
-                        <div className="mb-3 flex items-center justify-end">
+                        <Box mb={3} display="flex" justifyContent="flex-end">
                             <Link
                                 to={`/browse?q=${encodeURIComponent(
                                     q
                                 )}&limit=${encodeURIComponent(
                                     Math.max(10, parseInt(k, 10) || 10)
                                 )}`}
-                                className="text-sm accent-text mr-2"
                             >
-                                Open full list
+                                <Button variant="link" size="sm">
+                                    Open full list
+                                </Button>
                             </Link>
-                        </div>
+                        </Box>
                     )}
-
-                    {results.length === 0 && <div>No results</div>}
-
-                    <div className="space-y-3">
+                    {results.length === 0 && <Box>No results</Box>}
+                    <Box>
                         {results.map((r, i) => (
                             <ResultsCard key={i} item={r} query={q} />
                         ))}
-                    </div>
-                </div>
-            </div>
+                    </Box>
+                </Box>
+            </Box>
         </>
     );
 }

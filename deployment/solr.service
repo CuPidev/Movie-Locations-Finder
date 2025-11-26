@@ -1,0 +1,16 @@
+[Unit]
+Description=Apache Solr Search Server
+After=network.target
+
+[Service]
+Type=forking
+User=solr
+Group=solr
+Environment="SOLR_INCLUDE=/opt/solr/bin/solr.in.sh"
+ExecStart=/opt/solr/bin/solr start
+ExecStop=/opt/solr/bin/solr stop
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

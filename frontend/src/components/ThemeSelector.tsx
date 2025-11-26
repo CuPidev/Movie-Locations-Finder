@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { Button, Select } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 
 const THEMES = [
     { id: "teal", label: "Teal" },
@@ -54,21 +55,24 @@ export default function ThemeSelector() {
 
     return (
         <span className="inline-flex items-center gap-2">
-            <select
+            <Select
                 id="theme-select"
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
-                className="ml-2 border rounded px-2 py-1 text-sm"
+                className="ml-2 text-sm"
                 aria-label="Accent color"
+                bg="var(--input-bg)"
+                color="var(--text)"
+                borderColor="var(--input-border)"
             >
                 {THEMES.map((t) => (
                     <option key={t.id} value={t.id}>
                         {t.label}
                     </option>
                 ))}
-            </select>
+            </Select>
 
-            <button
+            <Button
                 aria-pressed={mode === "dark"}
                 onClick={() =>
                     setMode((m) => (m === "dark" ? "light" : "dark"))
@@ -78,10 +82,13 @@ export default function ThemeSelector() {
                         ? "Switch to light mode"
                         : "Switch to dark mode"
                 }
-                className="ml-1 px-2 py-1 border rounded text-sm"
+                className="ml-1 px-2 py-1 text-sm"
+                bg="var(--accent)"
+                color="var(--button-text)"
+                _hover={{ bg: "var(--accent-700)" }}
             >
                 {mode === "dark" ? "🌙 Dark" : "☀️ Light"}
-            </button>
+            </Button>
         </span>
     );
 }

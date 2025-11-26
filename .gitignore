@@ -27,7 +27,8 @@ venv.bak/
 # Pytest cache
 .pytest_cache/
 .cache/
-
+# Solr installation directory (but not deployment files)
+solr-*/
 # Coverage and reports
 .coverage
 coverage.xml
@@ -85,10 +86,10 @@ build/
 *.crt
 
 # Generated project artifacts we don't want in git
-data/
 data/*.pkl
 data/*.db
 data/*.sqlite
+data/*.json
 
 # Coverage folders
 htmlcov/
@@ -105,7 +106,6 @@ env/
 venv/
 dist/
 build/
-data/
 *.db
 *.pkl
 .venv

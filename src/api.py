@@ -1,344 +1,121 @@
-"""Flask API to serve heritage site search results."""
+"""Flask API to serve the movie locations app and solr search results."""
 
 import os
-import json
-import random
-from typing import Optional, Any, Dict
-from flask import Flask, request, jsonify, send_from_directory
+from typing import Optional
+
+from flask import Flask, request, send_from_directory
 from flask_cors import CORS
 
-from .fetcher import fetch_unesco_list, sample_sites
-from .indexer import HeritageIndexer
-from .feedback import append_events
-
+from src.indexer import Indexer
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
-DATA_DIR = os.path.join(ROOT, "data")
-os.makedirs(DATA_DIR, exist_ok=True)
-SITES_JSON = os.path.join(DATA_DIR, "sites.json")
-INDEX_PKL = os.path.join(DATA_DIR, "index.pkl")
-ENRICHED_INDEX_PKL = os.path.join(DATA_DIR, "index_enriched.pkl")
-
-# Results paging defaults and safety clamps
-DEFAULT_K = 5
-MIN_K = 1
-# Allow overriding max via environment variable (useful for deployment)
-try:
-    MAX_K = int(os.environ.get("HSF_MAX_K", "50"))
-except Exception:
-    MAX_K = 50
 
 
-# this is what is actually used by the runner
 def create_app(static_folder: Optional[str] = None):
     if static_folder is None:
-        # current simple frontend
-        # static_folder = os.path.join(ROOT, "web")
         # React built frontend
-        static_folder = os.path.join(ROOT, "web/dist")
+        static_folder = os.path.join(ROOT, "frontend/dist")
 
     app = Flask(__name__, static_folder=static_folder, static_url_path="")
     CORS(app)
 
-    indexer = HeritageIndexer()
-
-    # try to load existing index (prefer enriched) or build from saved JSON or sample
-    def _build_from_saved():
-        # prefer enriched index if present
-        if os.path.exists(ENRICHED_INDEX_PKL):
-            try:
-                indexer.load(ENRICHED_INDEX_PKL)
-                return True
-            except Exception:
-                pass
-        if os.path.exists(INDEX_PKL):
-            try:
-                indexer.load(INDEX_PKL)
-                return True
-            except Exception:
-                pass
-        # try load sites.json
-        if os.path.exists(SITES_JSON):
-            with open(SITES_JSON, "r", encoding="utf-8") as f:
-                docs = json.load(f)
-            indexer.fit(docs)
-            indexer.save(INDEX_PKL)
-            return True
-        # fallback sample
-        docs = sample_sites()
-        indexer.fit(docs)
-        indexer.save(INDEX_PKL)
-        return True
-
-    _build_from_saved()
-
-    @app.route("/search")
+    @app.route("/api/search")
     def search():
-        q = request.args.get("q", "")
-        # parse k safely and clamp to configured bounds to avoid excessive work
-        k_raw = request.args.get("k", None)
+        query = request.args.get("q", "")
+        print(f"[DEBUG] Received query: '{query}'")
+        if not query:
+            return {"results": []}
+
+        indexer = Indexer()
         try:
-            k = int(k_raw) if k_raw is not None else DEFAULT_K
-        except (ValueError, TypeError):
-            k = DEFAULT_K
-        # enforce clamps
-        k = max(MIN_K, min(k, MAX_K))
-        if not q:
-            return jsonify({"error": "missing query parameter 'q'"}), 400
-        # Simple geographic parsing: detect "in <place>" and use it as a post-filter
-        # e.g. "castle in asia" -> query="castle", place="asia"
-        place = None
-        m = None
-        try:
-            m = __import__("re").search(
-                r"\bin\s+([A-Za-z \-]+)$", q, __import__("re").IGNORECASE
-            )
-        except Exception:
-            m = None
-        if m:
-            place = m.group(1).strip()
-            # remove the trailing "in <place>" from the query
-            q = q[: m.start()].strip()
-
-        try:
-            results = indexer.search(q or (place or ""), top_k=max(k * 4, k))
-        except RuntimeError:
-            return jsonify({"error": "Index not ready"}), 500
-
-        # If place was provided, post-filter results by continent or country match
-        if place:
-            place_l = place.lower()
-            # simple continent match
-            continents = {
-                "asia",
-                "europe",
-                "africa",
-                "oceania",
-                "america",
-                "north america",
-                "south america",
-                "americas",
-            }
-
-            def match_place(doc):
-                # check explicit continent field
-                cont = doc.get("continent")
-                if cont and cont.lower() == place_l:
-                    return True
-                if cont and place_l in cont.lower():
-                    return True
-                # check country field
-                country = doc.get("country") or ""
-                if country and place_l in country.lower():
-                    return True
-                # fallback: check name/description text contains place
-                txt = (doc.get("name", "") + " " + doc.get("description", "")).lower()
-                if place_l in txt:
-                    return True
-                return False
-
-            # if user asked 'in asia' or similar, try to match continent first
-            if place_l in continents or place_l.endswith("asia"):
-                filtered = [r for r in results if match_place(r)]
-            else:
-                # otherwise prefer country/name matches
-                filtered = [r for r in results if match_place(r)]
-
-            # limit to requested k
-            results = filtered[:k]
-        else:
-            results = results[:k]
-
-        return jsonify(results)
-
-    @app.route("/browse")
-    def browse():
-        """Return a paginated list of documents for browsing.
-
-        Query params:
-        - offset: start index (default 0)
-        - limit: number of items to return (default 10, max 100)
-        - shuffle: if true, return a random sample of `limit` items
-        """
-        try:
-            offset = int(request.args.get("offset", "0"))
-        except Exception:
-            offset = 0
-        try:
-            limit = int(request.args.get("limit", "10"))
-        except Exception:
-            limit = 10
-        limit = max(1, min(limit, 100))
-        shuffle_flag = request.args.get("shuffle") in ("1", "true", "True")
-
-        # If a query is provided, use the indexer to rank documents, then paginate
-        q = request.args.get("q")
-        if q:
-            # use indexer to rank all documents
-            total_docs = len(getattr(indexer, "docs", []) or [])
-            top_k_all = max(1, total_docs)
-            docs_ranked = indexer.search(q, top_k=top_k_all)
-            total = len(docs_ranked)
-            # apply pagination on ranked docs
-            start = max(0, offset)
-            slice_ranked = docs_ranked[start : start + limit]
-            items = [
-                {
-                    "id": r.get("id"),
-                    "name": r.get("name"),
-                    "description": r.get("description"),
-                }
-                for r in slice_ranked
-            ]
-            return jsonify(
-                {"total": total, "offset": start, "limit": limit, "items": items}
-            )
-
-        docs = getattr(indexer, "docs", []) or []
-        total = len(docs)
-        if shuffle_flag:
-            # sample without replacement
-            sample_count = min(limit, total)
-            sampled = random.sample(docs, sample_count) if sample_count else []
-            items = [
-                {
-                    "id": str(d.get("id", "")),
-                    "name": d.get("name"),
-                    "description": d.get("description"),
-                    "country": d.get("country"),
-                }
-                for d in sampled
-            ]
-            return jsonify(
-                {"total": total, "offset": offset, "limit": limit, "items": items}
-            )
-
-        # clamp offset
-        if offset < 0:
-            offset = 0
-        items_slice = docs[offset : offset + limit]
-        items = [
-            {
-                "id": str(d.get("id", "")),
-                "name": d.get("name"),
-                "description": d.get("description"),
-                "country": d.get("country"),
-            }
-            for d in items_slice
-        ]
-        return jsonify(
-            {"total": total, "offset": offset, "limit": limit, "items": items}
-        )
-
-    @app.route("/rebuild", methods=["POST", "GET"])
-    def rebuild():
-        """Rebuild index. If `json_url` provided as query or json body, fetch that URL; if `use_fetcher` is true, call the configured UNESCO endpoint."""
-        json_url = (
-            request.args.get("json_url")
-            or request.json
-            and request.json.get("json_url")
-        )
-        use_fetcher = (
-            request.args.get("use_fetcher") in ("1", "true", "True")
-            or request.json
-            and request.json.get("use_fetcher")
-        )
-        docs = None
-        if json_url:
-            try:
-                # load local file if path provided
-                if os.path.exists(json_url):
-                    with open(json_url, "r", encoding="utf-8") as f:
-                        docs = json.load(f)
-                else:
-                    docs = fetch_unesco_list(url=json_url)
-            except Exception as e:
-                return jsonify({"error": str(e)}), 500
-        elif use_fetcher:
-            try:
-                docs = fetch_unesco_list()
-            except Exception as e:
-                return jsonify({"error": str(e)}), 500
-
-        if docs is not None:
-            # save to sites.json
-            with open(SITES_JSON, "w", encoding="utf-8") as f:
-                json.dump(docs, f, ensure_ascii=False, indent=2)
-            indexer.fit(docs)
-            indexer.save(INDEX_PKL)
-            return jsonify({"status": "rebuilt", "count": len(docs)})
-
-        return jsonify({"status": "nothing to do"})
-
-    @app.route("/feedback", methods=["POST"])
-    def feedback():
-        """Accept feedback events (single object or array) and append to data/feedback.json.
-
-        Minimal validation is applied. Clients should send either a single JSON
-        object or an array of objects. Each event should include at least
-        `event_id`, `session_id`, `action` and `doc_id`.
-        """
-        payload = request.get_json(silent=True)
-        if payload is None:
-            return jsonify({"error": "invalid json"}), 400
-
-        events = payload if isinstance(payload, list) else [payload]
-
-        valid_actions = {"relevance", "click", "dwell", "reformulation", "impression"}
-        to_save = []
-        errors = []
-        for i, ev in enumerate(events):
-            if not isinstance(ev, dict):
-                errors.append({"index": i, "error": "event must be an object"})
-                continue
-            # basic required fields
-            if not ev.get("event_id"):
-                errors.append({"index": i, "error": "missing event_id"})
-                continue
-            if not ev.get("session_id"):
-                errors.append({"index": i, "error": "missing session_id"})
-                continue
-            if not ev.get("doc_id"):
-                errors.append({"index": i, "error": "missing doc_id"})
-                continue
-            action = ev.get("action")
-            if not action or action not in valid_actions:
-                errors.append(
-                    {
-                        "index": i,
-                        "error": f"invalid or missing action (must be one of {sorted(valid_actions)})",
-                    }
-                )
-                continue
-            # add server timestamp if missing
-            if not ev.get("timestamp"):
-                import datetime
-
-                ev["timestamp"] = datetime.datetime.utcnow().isoformat() + "Z"
-
-            to_save.append(ev)
-
-        if errors and not to_save:
-            return jsonify({"error": "validation failed", "details": errors}), 400
-
-        try:
-            count = append_events(to_save)
+            results = indexer.search(query)
+            print(f"[DEBUG] Search returned: {results}")
+            print(f"[DEBUG] Results type: {type(results)}")
+            # Convert results to list of dicts
+            results_list = []
+            for doc in results:
+                results_list.append(dict(doc))
+            print(f"[DEBUG] Converted to list, length: {len(results_list)}")
+            return {"results": results_list}
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            print(f"Search failed: {e}")
+            import traceback
 
-        # use a generic dict[Any] so static checkers allow mixed value types
-        resp: Dict[str, Any] = {"saved": count}
-        if errors:
-            resp["partial_errors"] = errors
-        return jsonify(resp), 201
+            traceback.print_exc()
+            # Fallback to mock data for demonstration if Solr is down
+            return {
+                "results": [
+                    {
+                        "id": "mock-1",
+                        "name": "Mock Heritage Site (Solr Unavailable)",
+                        "description": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
+                        "country": "Demo Land",
+                        "score": 1.0,
+                    },
+                    {
+                        "id": "mock-2",
+                        "name": "Another Mock Site",
+                        "description": "Solr integration is implemented, but the server is offline.",
+                        "country": "Test Country",
+                        "score": 0.8,
+                    },
+                ]
+            }
 
     @app.route("/", defaults={"path": "index.html"})
     @app.route("/<path:path>")
     def serve_frontend(path):
-        # serve static frontend files from web/
+        # serve static frontend files from frontend/dist
         if app.static_folder and os.path.exists(os.path.join(app.static_folder, path)):
             return send_from_directory(app.static_folder, path)
         return ("Not Found", 404)
+
+    @app.route("/api/browse")
+    def browse():
+        # Provide simple browsing/pagination endpoint backed by Solr
+        try:
+            offset = int(request.args.get("offset", "0") or "0")
+        except Exception:
+            offset = 0
+        try:
+            limit = int(request.args.get("limit", "10") or "10")
+        except Exception:
+            limit = 10
+        q = request.args.get("q", "")
+        shuffle = request.args.get("shuffle") == "1"
+
+        indexer = Indexer()
+        try:
+            results = indexer.browse(
+                query=q or None, offset=offset, limit=limit, shuffle=shuffle
+            )
+            items = [dict(d) for d in results]
+            total = getattr(results, "hits", len(items))
+            return {"total": total, "items": items}
+        except Exception as e:
+            print(f"Browse failed: {e}")
+            import traceback
+
+            traceback.print_exc()
+            return {
+                "total": 2,
+                "items": [
+                    {
+                        "id": "mock-1",
+                        "title": "Mock Heritage Site (Solr Unavailable)",
+                        "content": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
+                        "country": "Demo Land",
+                        "score": 1.0,
+                    },
+                    {
+                        "id": "mock-2",
+                        "title": "Another Mock Site",
+                        "content": "Solr integration is implemented, but the server is offline.",
+                        "country": "Test Country",
+                        "score": 0.8,
+                    },
+                ],
+            }
 
     return app
 
