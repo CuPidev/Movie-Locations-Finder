@@ -1,4 +1,4 @@
-"""Flask API to serve heritage site search results."""
+"""Flask API to serve the movie locations app and solr search results."""
 
 import os
 from typing import Optional
