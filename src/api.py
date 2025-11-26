@@ -40,17 +40,13 @@ def create_app(static_folder: Optional[str] = None):
                 "results": [
                     {
                         "id": "mock-1",
-                        "name": "Mock Heritage Site (Solr Unavailable)",
-                        "description": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
-                        "country": "Demo Land",
-                        "score": 1.0,
+                        "title": "Mock Movie (Solr Unavailable)",
+                        "content": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
                     },
                     {
                         "id": "mock-2",
-                        "name": "Another Mock Site",
-                        "description": "Solr integration is implemented, but the server is offline.",
-                        "country": "Test Country",
-                        "score": 0.8,
+                        "title": "Another Mock Movie",
+                        "content": "Solr integration is implemented, but the server is offline.",
                     },
                 ]
             }
