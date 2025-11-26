@@ -29,14 +29,7 @@ def create_app(static_folder: Optional[str] = None):
         indexer = Indexer()
         try:
             results = indexer.search(query)
-            print(f"[DEBUG] Search returned: {results}")
-            print(f"[DEBUG] Results type: {type(results)}")
-            # Convert results to list of dicts
-            results_list = []
-            for doc in results:
-                results_list.append(dict(doc))
-            print(f"[DEBUG] Converted to list, length: {len(results_list)}")
-            return {"results": results_list}
+            return {"results": results.docs}
         except Exception as e:
             print(f"Search failed: {e}")
             import traceback
