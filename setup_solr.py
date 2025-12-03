@@ -38,9 +38,9 @@ def install_and_run_solr():
     # Let's just run start. It handles "already running" gracefully usually.
     
     try:
-        # Start Solr and create core 'heritage_sites'
-        # -c heritage_sites creates the core if it doesn't exist
-        cmd = [solr_cmd, "start", "-c", "heritage_sites"]
+        # Start Solr and create core 'movie_sites'
+        # -c movie_sites creates the core if it doesn't exist
+        cmd = [solr_cmd, "start", "-c", "movie_sites"]
         print(f"Running: {' '.join(cmd)}")
         subprocess.check_call(cmd, shell=True)
         print("Solr started successfully.")

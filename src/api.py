@@ -91,7 +91,7 @@ def create_app(static_folder: Optional[str] = None):
                 "items": [
                     {
                         "id": "mock-1",
-                        "title": "Mock Heritage Site (Solr Unavailable)",
+                        "title": "Mock Movie (Solr Unavailable)",
                         "content": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
                         "country": "Demo Land",
                         "score": 1.0,

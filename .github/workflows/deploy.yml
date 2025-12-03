@@ -134,10 +134,10 @@ jobs:
                     if [ "$DOC_COUNT" -eq 0 ]; then
                       echo "WARNING: No documents were indexed!"
                     fi
-                    sudo systemctl restart heritage
+                    sudo systemctl restart movie
                     # trigger the indexer service to rebuild the enriched index (best-effort)
                     # requires the deploy user to have NOPASSWD sudo for starting the unit, otherwise this will be ignored
-                    sudo systemctl start heritage-indexer.service || true
+                    sudo systemctl start movie-indexer.service || true
                     echo "Remote deploy finished"
                   REMOTE
 

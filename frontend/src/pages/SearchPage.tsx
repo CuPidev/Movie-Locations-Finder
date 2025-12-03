@@ -50,10 +50,10 @@ export default function SearchPage() {
     return (
         <>
             <Helmet>
-                <title>Heritage Sites Finder - Search</title>
+                <title>Movie Sites Finder - Search</title>
                 <meta
                     name="description"
-                    content="Search UNESCO World Heritage sites"
+                    content="Search movie sites"
                 />
             </Helmet>
             <Box>

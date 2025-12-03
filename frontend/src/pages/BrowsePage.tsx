@@ -91,10 +91,10 @@ export default function BrowsePage() {
     return (
         <Box>
             <Helmet>
-                <title>Heritage Sites Finder - Browse</title>
+                <title>Movie Sites Finder - Browse</title>
                 <meta
                     name="description"
-                    content="Browse UNESCO World Heritage sites"
+                    content="Browse Movie sites"
                 />
             </Helmet>
             <Box mb={3}>
