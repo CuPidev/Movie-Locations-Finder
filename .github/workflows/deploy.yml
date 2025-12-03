@@ -27,7 +27,11 @@ jobs:
                   if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
                     SSH_OPTS="-p ${{ secrets.DEPLOY_PORT }}"
                   fi
-                  echo "Testing SSH connection to ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} ${DEPLOY_PORT:+on port $DEPLOY_PORT}"
+                  if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
+                    echo "Testing SSH connection to ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} on port ${{ secrets.DEPLOY_PORT }}"
+                  else
+                    echo "Testing SSH connection to ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
+                  fi
                   sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_OPTS "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "echo connected" || (echo "SSH preflight failed: check DEPLOY_HOST/DEPLOY_USER and DEPLOY_PASSWORD, and that PasswordAuthentication is enabled on the VPS" && exit 1)
 
             - name: Setup Node.js (for frontend build)
@@ -53,7 +57,15 @@ jobs:
 
             - name: Create tarball
               run: |
-                  tar -czf /tmp/repo_deploy.tar.gz --exclude='.git' --exclude='.venv' --exclude='data' --exclude='solr-9.10.0' .
+                  # Exclude large/runtime artifacts (Solr release folder, venv, node_modules, data files)
+                  tar -czf /tmp/repo_deploy.tar.gz \
+                    --exclude='.git' \
+                    --exclude='.venv' \
+                    --exclude='data' \
+                    --exclude='frontend/node_modules' \
+                    --exclude='solr-*' \
+                    --exclude='frontend/.turbo' \
+                    .
                   echo "Created /tmp/repo_deploy.tar.gz (size: $(ls -lh /tmp/repo_deploy.tar.gz | awk '{print $5}'))"
 
             - name: Copy tarball to VPS (password auth)
@@ -134,10 +146,10 @@ jobs:
                     if [ "$DOC_COUNT" -eq 0 ]; then
                       echo "WARNING: No documents were indexed!"
                     fi
-                    sudo systemctl restart movie
+                    sudo systemctl restart movies
                     # trigger the indexer service to rebuild the enriched index (best-effort)
                     # requires the deploy user to have NOPASSWD sudo for starting the unit, otherwise this will be ignored
-                    sudo systemctl start movie-indexer.service || true
+                    sudo systemctl start movies-indexer.service || true
                     echo "Remote deploy finished"
                   REMOTE
 
