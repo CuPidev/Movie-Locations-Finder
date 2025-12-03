@@ -46,7 +46,7 @@ Installs Python packages from `requirements.txt` in a virtual environment.
 - Fails deployment if indexing errors occur
 
 ### 7. **Application Restart**
-Restarts the Flask application systemd service (`movies`).
+Restarts the Flask application systemd service (`heritage`).
 
 ## Solr Configuration
 
@@ -101,7 +101,7 @@ The workflow requires these GitHub secrets:
 | `DEPLOY_HOST` | VPS hostname or IP address |
 | `DEPLOY_USER` | SSH username |
 | `DEPLOY_PASSWORD` | SSH password |
-| `DEPLOY_PATH` | Deployment directory path (e.g., `/opt/movie-sites-finder`) |
+| `DEPLOY_PATH` | Deployment directory path (e.g., `/opt/heritage-sites-finder`) |
 | `DEPLOY_PORT` | SSH port (optional, defaults to 22) |
 
 ## VPS Requirements
@@ -143,14 +143,14 @@ curl "http://localhost:8983/solr/movies/select?q=*:*&rows=0"
 
 ### Re-index Data Manually
 ```bash
-cd /opt/movie-sites-finder  # or your DEPLOY_PATH
+cd /opt/heritage-sites-finder  # or your DEPLOY_PATH
 source .venv/bin/activate
 python index_data.py
 ```
 
 ### View Application Logs
 ```bash
-sudo journalctl -u movie -f
+sudo journalctl -u heritage -f
 ```
 
 ## Troubleshooting
@@ -186,13 +186,13 @@ sudo systemctl restart solr
 **Solution:**
 ```bash
 # Check if file exists
-ls -lh /opt/movie-sites-finder/movie_locations.json
+ls -lh /opt/heritage-sites-finder/movie_locations.json
 
 # Verify core exists
 curl "http://localhost:8983/solr/admin/cores?action=STATUS&core=movies"
 
 # Re-run indexing with verbose output
-cd /opt/movie-sites-finder
+cd /opt/heritage-sites-finder
 source .venv/bin/activate
 python index_data.py
 ```
@@ -203,8 +203,8 @@ python index_data.py
 **Solution:**
 1. Check Solr is running: `sudo systemctl status solr`
 2. Verify Flask can reach Solr: `curl http://localhost:8983/solr/movies/select?q=test`
-3. Check application logs: `sudo journalctl -u movie -n 50`
-4. Restart application: `sudo systemctl restart movie`
+3. Check application logs: `sudo journalctl -u heritage -n 50`
+4. Restart application: `sudo systemctl restart heritage`
 
 ## Manual Solr Setup (Alternative)
 
@@ -213,7 +213,7 @@ If you prefer to set up Solr manually instead of using the automated workflow:
 1. SSH into your VPS
 2. Run the setup script:
    ```bash
-   cd /opt/movie-sites-finder/deployment
+   cd /opt/heritage-sites-finder/deployment
    sudo bash setup_solr_vps.sh
    ```
 3. Comment out the Solr setup section in `.github/workflows/deploy.yml` (lines 85-95)
