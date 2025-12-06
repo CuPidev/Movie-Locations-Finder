@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 import { Box, Button, Input, Select } from "@chakra-ui/react";
 import ResultsCard from "../components/ResultsCard";
+import SimilarDocumentsModal from "../components/SimilarDocumentsModal";
 
 export default function SearchPage() {
     const [q, setQ] = useState("");
@@ -17,11 +18,28 @@ export default function SearchPage() {
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<any[]>([]);
 
+    // Modal state for "More Like This"
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+    const [selectedItemTitle, setSelectedItemTitle] = useState<string | undefined>(undefined);
+
     useEffect(() => {
         try {
             localStorage.setItem("hsf:k", k);
-        } catch (e) {}
+        } catch (e) { }
     }, [k]);
+
+    const handleFindSimilar = (id: string, title?: string) => {
+        setSelectedItemId(id);
+        setSelectedItemTitle(title);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedItemId(null);
+        setSelectedItemTitle(undefined);
+    };
 
     async function doSearch() {
         const tq = q.trim();
@@ -128,11 +146,19 @@ export default function SearchPage() {
                     {results.length === 0 && <Box>No results</Box>}
                     <Box>
                         {results.map((r, i) => (
-                            <ResultsCard key={i} item={r} query={q} />
+                            <ResultsCard key={i} item={r} query={q} onFindSimilar={handleFindSimilar} />
                         ))}
                     </Box>
                 </Box>
             </Box>
+
+            {/* More Like This Modal */}
+            <SimilarDocumentsModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                documentId={selectedItemId}
+                documentTitle={selectedItemTitle}
+            />
         </>
     );
 }

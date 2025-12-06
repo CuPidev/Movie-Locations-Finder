@@ -65,7 +65,7 @@ class Indexer:
 
         return self.solr.search(solr_query, **params)
 
-    def more_like_this(self, doc_id: str, mlt_fields: list = None, **kwargs):
+    def more_like_this(self, doc_id: str, mlt_fields: list = None, count: int = 10, **kwargs):
         """Find similar documents using Solr's Standard Request Handler with mlt=true."""
         if mlt_fields is None:
             mlt_fields = ["title", "content"]
@@ -75,9 +75,20 @@ class Indexer:
             "mlt.fl": ",".join(mlt_fields),
             "mlt.mindf": 1,
             "mlt.mintf": 1,
+            "mlt.count": count,
             "rows": 1,
         }
         params.update(kwargs)
 
         results = self.solr.search(f'id:"{doc_id}"', **params)
-        return getattr(results, "moreLikeThis", {}).get(doc_id, [])
+        
+        # pysolr stores moreLikeThis in raw_response, not as a direct attribute
+        mlt_response = results.raw_response.get("moreLikeThis", {})
+        mlt_data = mlt_response.get(doc_id, {})
+        
+        # Handle both formats: direct list or dict with 'docs' key
+        if isinstance(mlt_data, dict):
+            return mlt_data.get("docs", [])
+        return mlt_data
+
+
