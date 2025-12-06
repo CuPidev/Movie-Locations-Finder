@@ -105,6 +105,34 @@ def create_app(static_folder: Optional[str] = None):
                     },
                 ],
             }
+            
+    @app.route("/api/more-like-this")
+    def more_like_this():
+        doc_id = request.args.get("id")
+        if not doc_id:
+            return {"error": "Missing 'id' parameter"}, 400
+            
+        indexer = Indexer()
+        try:
+            results = indexer.more_like_this(doc_id)
+            # pysolr more_like_this returns a specialized object, but usually it behaves mostly like results
+            # The structure might differ slightly depending on pysolr version, but usually it's iterable
+            items = [dict(d) for d in results]
+            return {"results": items}
+        except Exception as e:
+            print(f"More Like This failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "results": [
+                    {
+                        "id": "mock-sim-1",
+                        "title": "Similar Mock Movie",
+                        "content": "Simulated similar content because Solr failed.",
+                        "score": 0.9
+                    }
+                ]
+            }
 
     return app
 

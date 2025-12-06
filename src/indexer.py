@@ -58,3 +58,31 @@ class Indexer:
             params.setdefault("sort", "score desc")
 
         return self.solr.search(solr_query, **params)
+
+    def more_like_this(self, doc_id: str, mlt_fields: list = None, **kwargs):
+        """Find similar documents using Solr's Standard Request Handler with mlt=true."""
+        if mlt_fields is None:
+            mlt_fields = ["title", "content"]
+
+        query = f'id:"{doc_id}"'
+
+        params = kwargs.copy()
+        params["mlt"] = "true"
+        params["mlt.fl"] = ",".join(mlt_fields)
+        params.setdefault("mlt.mindf", 1)
+        params.setdefault("mlt.mintf", 1)
+        # Set rows to 1 to ensure we find the source doc (required for MLT usually)
+        params.setdefault("rows", 1)
+
+        results = self.solr.search(query, **params)
+        
+        # results.moreLikeThis is a dict: { doc_id: [ ... similar docs ... ] }
+        if hasattr(results, 'moreLikeThis') and doc_id in results.moreLikeThis:
+             return results.moreLikeThis[doc_id]
+        # In case the ID in response doesn't match exactly or something
+        if hasattr(results, 'moreLikeThis'):
+            # Return the first list found if any
+            for key in results.moreLikeThis:
+                return results.moreLikeThis[key]
+                
+        return []
