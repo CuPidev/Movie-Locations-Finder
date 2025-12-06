@@ -139,8 +139,7 @@ export default function App() {
                                     🪨🎬Movie Filming Locations Finder
                                 </Box>
                                 <Box fontSize="sm" mb={2} color="var(--muted)">
-                                    Search UNESCO World Heritage sites by
-                                    keyword.
+                                    Search Movie sites by keyword.
                                 </Box>
                                 <Box
                                     mt={3}

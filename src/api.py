@@ -29,14 +29,7 @@ def create_app(static_folder: Optional[str] = None):
         indexer = Indexer()
         try:
             results = indexer.search(query)
-            print(f"[DEBUG] Search returned: {results}")
-            print(f"[DEBUG] Results type: {type(results)}")
-            # Convert results to list of dicts
-            results_list = []
-            for doc in results:
-                results_list.append(dict(doc))
-            print(f"[DEBUG] Converted to list, length: {len(results_list)}")
-            return {"results": results_list}
+            return {"results": results.docs}
         except Exception as e:
             print(f"Search failed: {e}")
             import traceback
@@ -47,17 +40,13 @@ def create_app(static_folder: Optional[str] = None):
                 "results": [
                     {
                         "id": "mock-1",
-                        "name": "Mock Heritage Site (Solr Unavailable)",
-                        "description": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
-                        "country": "Demo Land",
-                        "score": 1.0,
+                        "title": "Mock Movie (Solr Unavailable)",
+                        "content": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
                     },
                     {
                         "id": "mock-2",
-                        "name": "Another Mock Site",
-                        "description": "Solr integration is implemented, but the server is offline.",
-                        "country": "Test Country",
-                        "score": 0.8,
+                        "title": "Another Mock Movie",
+                        "content": "Solr integration is implemented, but the server is offline.",
                     },
                 ]
             }
@@ -102,7 +91,7 @@ def create_app(static_folder: Optional[str] = None):
                 "items": [
                     {
                         "id": "mock-1",
-                        "title": "Mock Heritage Site (Solr Unavailable)",
+                        "title": "Mock Movie (Solr Unavailable)",
                         "content": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
                         "country": "Demo Land",
                         "score": 1.0,
@@ -115,6 +104,34 @@ def create_app(static_folder: Optional[str] = None):
                         "score": 0.8,
                     },
                 ],
+            }
+            
+    @app.route("/api/more-like-this")
+    def more_like_this():
+        doc_id = request.args.get("id")
+        if not doc_id:
+            return {"error": "Missing 'id' parameter"}, 400
+            
+        indexer = Indexer()
+        try:
+            results = indexer.more_like_this(doc_id)
+            # pysolr more_like_this returns a specialized object, but usually it behaves mostly like results
+            # The structure might differ slightly depending on pysolr version, but usually it's iterable
+            items = [dict(d) for d in results]
+            return {"results": items}
+        except Exception as e:
+            print(f"More Like This failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "results": [
+                    {
+                        "id": "mock-sim-1",
+                        "title": "Similar Mock Movie",
+                        "content": "Simulated similar content because Solr failed.",
+                        "score": 0.9
+                    }
+                ]
             }
 
     return app

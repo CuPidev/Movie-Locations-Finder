@@ -1,4 +1,4 @@
-import { Button, Card } from "@chakra-ui/react";
+import { Box, Button } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 
 const MIN_SHOW_MORE_CHARS = 220;
@@ -30,7 +30,14 @@ function highlightText(text: string, query?: string) {
     return escaped.replace(re, '<span class="highlight">$1</span>');
 }
 
-export default function ResultsCard({ item, query, maxLen = 800 }: any) {
+interface ResultsCardProps {
+    item: any;
+    query?: string;
+    maxLen?: number;
+    onFindSimilar?: (id: string, title?: string) => void;
+}
+
+export default function ResultsCard({ item, query, maxLen = 800, onFindSimilar }: ResultsCardProps) {
     const fullText: string = item.content || "";
     const shortText: string =
         fullText.length > maxLen
@@ -43,8 +50,14 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
         return highlightText(expanded ? fullText : shortText, query);
     }, [expanded, fullText, shortText, query]);
 
+    const handleFindSimilar = () => {
+        if (onFindSimilar && item.id) {
+            onFindSimilar(item.id, item.title);
+        }
+    };
+
     return (
-        <Card
+        <Box
             className={"result" + (expanded ? " expanded" : "")}
             tabIndex={0}
             aria-labelledby={item.id ? `title-${item.id}` : undefined}
@@ -97,6 +110,26 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
                 {item.id ? `id: ${item.id}` : ""}
             </div>
 
+            {/* Find Similar button - top right */}
+            {onFindSimilar && item.id && (
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="find-similar px-3 py-1 text-xs"
+                    position="absolute"
+                    right={3}
+                    top={3}
+                    borderColor="var(--accent)"
+                    color="var(--accent-700)"
+                    onClick={handleFindSimilar}
+                    size="sm"
+                    zIndex={1}
+                >
+                    🔍 Find Similar
+                </Button>
+            )}
+
+            {/* Show more button - bottom right */}
             {shouldHaveToggle && (
                 <Button
                     type="button"
@@ -108,10 +141,11 @@ export default function ResultsCard({ item, query, maxLen = 800 }: any) {
                     borderColor="var(--accent)"
                     color="var(--accent-700)"
                     onClick={() => setExpanded((s) => !s)}
+                    size="sm"
                 >
                     {expanded ? "Show less" : "Show more"}
                 </Button>
             )}
-        </Card>
+        </Box>
     );
 }

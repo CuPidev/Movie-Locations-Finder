@@ -86,10 +86,7 @@ build/
 *.crt
 
 # Generated project artifacts we don't want in git
-data/*.pkl
-data/*.db
-data/*.sqlite
-data/*.json
+temp/
 
 # Coverage folders
 htmlcov/

@@ -20,6 +20,12 @@ class Indexer:
         """
         self.solr.add(docs)
 
+    def delete_all(self):
+        """
+        Delete all documents from the Solr index.
+        """
+        self.solr.delete(q="*:*")
+
     def search(self, query: str, **kwargs):
         # Search across title and content fields
         # Use Solr's query syntax to search multiple fields
@@ -58,3 +64,34 @@ class Indexer:
             params.setdefault("sort", "score desc")
 
         return self.solr.search(solr_query, **params)
+
+    def more_like_this(self, doc_id: str, mlt_fields: list = None, count: int = 10, **kwargs):
+        """Find similar documents using Solr's Standard Request Handler with mlt=true."""
+        if mlt_fields is None:
+            mlt_fields = ["title", "content"]
+
+        params = {
+            "mlt": "true",
+            "mlt.fl": ",".join(mlt_fields),
+            "mlt.mindf": 1,
+            "mlt.mintf": 1,
+            "mlt.count": count,
+            "mlt.boost": "true",  # Boost results by term frequency
+            "mlt.qf": "title^3 content^1",  # Boost title matches 3x more than content
+            "rows": 1,
+            "fl": "*, score",  # Include score in results
+        }
+        params.update(kwargs)
+
+        results = self.solr.search(f'id:"{doc_id}"', **params)
+        
+        # pysolr stores moreLikeThis in raw_response, not as a direct attribute
+        mlt_response = results.raw_response.get("moreLikeThis", {})
+        mlt_data = mlt_response.get(doc_id, {})
+        
+        # Handle both formats: direct list or dict with 'docs' key
+        if isinstance(mlt_data, dict):
+            return mlt_data.get("docs", [])
+        return mlt_data
+
+
