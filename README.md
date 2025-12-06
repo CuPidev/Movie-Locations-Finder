@@ -44,7 +44,7 @@ yarn build
 
 ### 3. Apache Solr Setup
 
-This project uses Apache Solr for search functionality. To install Solr and create the `movies` core, follow one of the options below.
+This project uses Apache Solr for search functionality. To install Solr and create the `movies` core, follow one of the options below. Java 11+ is required to be installed.
 
 **Option 1: Using Docker (Recommended)**
 
@@ -52,18 +52,18 @@ This project uses Apache Solr for search functionality. To install Solr and crea
 docker-compose up -d
 ```
 
-**Option 2: Manual Installation (Windows)**
+**Option 2: Manual Installation**
+
+[Download Solr](https://solr.apache.org/downloads.html), extract it, and run the following from the `bin` directory:
 
 ```bash
-# Set JAVA_HOME (Windows PowerShell)
-$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-17.0.11.9-hotspot"
-
-# Start Solr
-cd solr-9.10.0\bin
+# Windows
 .\solr.cmd start
-
-# Create the movies core (first time only)
 .\solr.cmd create -c movies
+
+# Linux/MacOS
+./solr start
+./solr create -c movies
 ```
 
 **Option 3: Using Homebrew (MacOS)**
