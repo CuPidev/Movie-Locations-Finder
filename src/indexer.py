@@ -20,6 +20,12 @@ class Indexer:
         """
         self.solr.add(docs)
 
+    def delete_all(self):
+        """
+        Delete all documents from the Solr index.
+        """
+        self.solr.delete(q="*:*")
+
     def search(self, query: str, **kwargs):
         # Search across title and content fields
         # Use Solr's query syntax to search multiple fields

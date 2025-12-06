@@ -40,6 +40,10 @@ def index_data():
     solr_url = os.getenv("SOLR_URL", "http://localhost:8983/solr/movies")
     print(f"Connecting to Solr at: {solr_url}")
     indexer = Indexer(solr_url=solr_url)
+    
+    # Clean index before adding new documents
+    print("Cleaning existing Solr index...")
+    indexer.delete_all()
 
     total_indexed = 0
 
