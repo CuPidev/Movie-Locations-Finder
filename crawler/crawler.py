@@ -42,6 +42,13 @@ def crawlMovieLocationsCom(
 
     scrape_url_base: str = "https://movie-locations.com/"
     scrape_movies_url: str = "https://movie-locations.com/movies/"
+
+    # Ensure output directory exists from the very start
+    output_path = Path(output)
+    if not output_path.parent.exists():
+        rprint(f"[yellow]Creating directory {output_path.parent}[/yellow]")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
     rprint(f"[blue]Initializing crawl for {scrape_url_base}[/blue]")
 
     rprint("[yellow]Loading seen URLs...[/yellow]")
