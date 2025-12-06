@@ -89,6 +89,7 @@ jobs:
                   # single heredoc invocation (avoids nested heredoc parsing issues)
                   sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $PORT_ARG "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "bash -s" <<'REMOTE'
                     set -euo pipefail
+                    DEPLOY_PATH='${{ secrets.DEPLOY_PATH }}'
                     echo "Deploying to $DEPLOY_PATH"
                     sudo mkdir -p "$DEPLOY_PATH"
                     sudo tar -xzf /tmp/repo_deploy.tar.gz -C "$DEPLOY_PATH"
