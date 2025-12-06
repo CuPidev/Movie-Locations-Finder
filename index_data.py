@@ -11,7 +11,7 @@ if ROOT not in sys.path:
 from src.indexer import Indexer
 
 def index_data():
-    data_path = os.path.join(ROOT, "movie_locations.json")
+    data_path = os.path.join(ROOT, "data", "movie_locations.json")
     if not os.path.exists(data_path):
         print(f"Error: {data_path} not found.")
         return

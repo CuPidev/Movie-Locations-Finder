@@ -26,7 +26,7 @@ https://movie-locations.com/movies/t/Tenet-film-locations.php
 
 
 def crawlMovieLocationsCom(
-    save_to_db: bool = False, output: str = "./data/movie_locations.json"
+    save_to_db: bool = False, output: str = "./temp/movie_locations.json"
 ) -> bool:
     """Crawler for movie-locations.com.
 
