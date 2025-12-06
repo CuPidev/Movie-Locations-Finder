@@ -44,7 +44,9 @@ def crawlCinemapper(output_path: str = "./temp/cinemapper.json") -> bool:
         return False
 
     raw_locations = data['app']['filmingLocations']
-    rprint(f"[green]Fetched {len(raw_locations)} locations.[/green]")
+    raw_pages = data['app'].get('pages', {}) # Get pages data for URL lookups
+    
+    rprint(f"[green]Fetched {len(raw_locations)} locations and {len(raw_pages)} pages.[/green]")
 
     # Group by film
     films: Dict[str, Dict[str, Any]] = {}
@@ -55,10 +57,23 @@ def crawlCinemapper(output_path: str = "./temp/cinemapper.json") -> bool:
         if not isinstance(film_name, str):
             film_name = str(film_name)
 
+        film_id = str(loc_data.get('filmId')) if loc_data.get('filmId') else None
+        
         if film_name not in films:
+            # Construct deep link using slug from pages if available, else fallback to filmId
+            movie_url = "https://cinemapper.com/browser"
+            if film_id and film_id in raw_pages:
+                slug = raw_pages[film_id].get('url')
+                if slug:
+                    movie_url = f"https://cinemapper.com/page/{slug}"
+                else:
+                    movie_url = f"https://cinemapper.com/page/id/{film_id}"
+            elif film_id:
+                 movie_url = f"https://cinemapper.com/page/id/{film_id}"
+            
             films[film_name] = {
                 "title": film_name,
-                "url": "https://cinemapper.com", 
+                "url": movie_url,
                 "text_content": "",
                 "locations": []
             }
