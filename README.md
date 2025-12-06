@@ -78,18 +78,17 @@ python index_data.py
 
 `http://localhost:8983/solr/`
 
-### VPS Deployment
-
-The GitHub Actions workflow automatically sets up Solr, creates the `movies` core, and indexes data. See `deployment/DEPLOYMENT.md` for details.
-
--   Run the API
+## Run the App
 
 ```bash
-cd ..
 python run_api.py
 ```
 
 The app will be available at 127.0.0.1:5000 by default
+
+## VPS Deployment
+
+The GitHub Actions workflow automatically sets up Solr, creates the `movies` core, and indexes data. See `deployment/DEPLOYMENT.md` for details.
 
 ## Structure
 
