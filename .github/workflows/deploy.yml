@@ -12,13 +12,8 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Validate required secrets (password auth)
-              env: 
-                  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-                  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-                  DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
-                  DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
               run: |
-                  if [ -z "${{ DEPLOY_HOST }}" ] || [ -z "${{ DEPLOY_USER }}" ] || [ -z "${{ DEPLOY_PASSWORD }}" ] || [ -z "${{ DEPLOY_PATH }}" ]; then
+                  if [ -z "${{ secrets.DEPLOY_HOST }}" ] || [ -z "${{ secrets.DEPLOY_USER }}" ] || [ -z "${{ secrets.DEPLOY_PASSWORD }}" ] || [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
                     echo "One or more required secrets are missing: DEPLOY_HOST, DEPLOY_USER, DEPLOY_PASSWORD, DEPLOY_PATH"
                     exit 1
                   fi
@@ -28,21 +23,17 @@ jobs:
 
             - name: Preflight SSH check (password)
               env:
-                  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-                  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-                  DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
-                  DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
               run: |
                   SSH_OPTS=""
-                  if [ -n "${{ DEPLOY_PORT }}" ]; then
-                    SSH_OPTS="-p ${{ DEPLOY_PORT }}"
+                  if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
+                    SSH_OPTS="-p ${{ secrets.DEPLOY_PORT }}"
                   fi
-                  if [ -n "${{ DEPLOY_PORT }}" ]; then
-                    echo "Testing SSH connection to ${{ DEPLOY_USER }}@${{ DEPLOY_HOST }} on port ${{ DEPLOY_PORT }}"
+                  if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
+                    echo "Testing SSH connection to ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} on port ${{ secrets.DEPLOY_PORT }}"
                   else
-                    echo "Testing SSH connection to ${{ DEPLOY_USER }}@${{ DEPLOY_HOST }}"
+                    echo "Testing SSH connection to ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
                   fi
-                  sshpass -p "${{ DEPLOY_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_OPTS "${{ DEPLOY_USER }}@${{ DEPLOY_HOST }}" "echo connected" || (echo "SSH preflight failed: check DEPLOY_HOST/DEPLOY_USER and DEPLOY_PASSWORD, and that PasswordAuthentication is enabled on the VPS" && exit 1)
+                  sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_OPTS "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "echo connected" || (echo "SSH preflight failed: check DEPLOY_HOST/DEPLOY_USER and DEPLOY_PASSWORD, and that PasswordAuthentication is enabled on the VPS" && exit 1)
 
             - name: Setup Node.js (for frontend build)
               uses: actions/setup-node@v4
@@ -79,35 +70,25 @@ jobs:
                   echo "Created /tmp/repo_deploy.tar.gz (size: $(ls -lh /tmp/repo_deploy.tar.gz | awk '{print $5}'))"
 
             - name: Copy tarball to VPS (password auth)
-              env:
-                  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-                  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-                  DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
-                  DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
               run: |
                   set -euo pipefail
-                  if [ -n "${{ DEPLOY_PORT }}" ]; then
-                    sshpass -p "${{ DEPLOY_PASSWORD }}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -P "${{ DEPLOY_PORT }}" /tmp/repo_deploy.tar.gz "${{ DEPLOY_USER }}@${{ DEPLOY_HOST }}:/tmp/repo_deploy.tar.gz"
+                  if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
+                    sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -P "${{ secrets.DEPLOY_PORT }}" /tmp/repo_deploy.tar.gz "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/repo_deploy.tar.gz"
                   else
-                    sshpass -p "${{ DEPLOY_PASSWORD }}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 /tmp/repo_deploy.tar.gz "${{ DEPLOY_USER }}@${{ DEPLOY_HOST }}:/tmp/repo_deploy.tar.gz"
+                    sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 /tmp/repo_deploy.tar.gz "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/repo_deploy.tar.gz"
                   fi
 
             - name: Remote extract, install and restart
-              env:
-                  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-                  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-                  DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
-                  DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
               run: |
                   set -euo pipefail
                   # compute optional port argument (empty if not provided)
                   PORT_ARG=""
-                  if [ -n "${{ DEPLOY_PORT }}" ]; then
-                    PORT_ARG="-p ${{ DEPLOY_PORT }}"
+                  if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
+                    PORT_ARG="-p ${{ secrets.DEPLOY_PORT }}"
                   fi
 
                   # single heredoc invocation (avoids nested heredoc parsing issues)
-                  sshpass -p "${{ DEPLOY_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $PORT_ARG "${{ DEPLOY_USER }}@${{ DEPLOY_HOST }}" "bash -s" <<'REMOTE'
+                  sshpass -p "${{ secrets.DEPLOY_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $PORT_ARG "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "bash -s" <<'REMOTE'
                     set -euo pipefail
                     echo "Deploying to $DEPLOY_PATH"
                     sudo mkdir -p "$DEPLOY_PATH"
