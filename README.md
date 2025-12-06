@@ -44,7 +44,7 @@ This project uses Apache Solr for search functionality. The Solr core is named `
 docker-compose up -d
 ```
 
-**Option 2: Manual Installation**
+**Option 2: Manual Installation (Windows)**
 
 ```bash
 # Set JAVA_HOME (Windows PowerShell)
@@ -56,6 +56,14 @@ cd solr-9.10.0\bin
 
 # Create the movies core (first time only)
 .\solr.cmd create -c movies
+```
+
+**Option 3: Using Homebrew (MacOS)**
+
+```bash
+brew install solr
+solr start
+solr create -c movies
 ```
 
 ### Indexing Data
