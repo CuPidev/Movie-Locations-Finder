@@ -76,7 +76,10 @@ class Indexer:
             "mlt.mindf": 1,
             "mlt.mintf": 1,
             "mlt.count": count,
+            "mlt.boost": "true",  # Boost results by term frequency
+            "mlt.qf": "title^3 content^1",  # Boost title matches 3x more than content
             "rows": 1,
+            "fl": "*, score",  # Include score in results
         }
         params.update(kwargs)
 
