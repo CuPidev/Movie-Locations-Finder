@@ -1,4 +1,4 @@
-import { Button, Card } from "@chakra-ui/react";
+import { Box, Button } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 
 const MIN_SHOW_MORE_CHARS = 220;
@@ -57,7 +57,7 @@ export default function ResultsCard({ item, query, maxLen = 800, onFindSimilar }
     };
 
     return (
-        <Card
+        <Box
             className={"result" + (expanded ? " expanded" : "")}
             tabIndex={0}
             aria-labelledby={item.id ? `title-${item.id}` : undefined}
@@ -146,6 +146,6 @@ export default function ResultsCard({ item, query, maxLen = 800, onFindSimilar }
                     {expanded ? "Show less" : "Show more"}
                 </Button>
             )}
-        </Card>
+        </Box>
     );
 }
