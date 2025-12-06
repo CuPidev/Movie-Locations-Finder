@@ -81,8 +81,8 @@ The Solr admin UI should now be available at `http://localhost:8983/solr/`.
 
 The repository already contains data that is ready to be indexed in the `data` directory. This data has been scraped from the following sources:
 
-1. movie-locations.com.
-2. TO BE ADDED
+1. movie-locations.com
+2. cinemapper.com
 3. TO BE ADDED
 
 Before running the indexer, make sure Solr is running. Then run:
@@ -96,7 +96,8 @@ python index_data.py
 To get updated data, run the crawler using 
 
 ```bash
-python ./crawler/crawler.py
+python ./crawler/movielocations_crawler.py
+python ./crawler/cinemapper_crawler.py
 ```
 
 after which new data will be available in the `temp` directory. Move the files from `temp` to `data` and run the indexer again.
