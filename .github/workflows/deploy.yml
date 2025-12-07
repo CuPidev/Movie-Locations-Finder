@@ -108,14 +108,22 @@ jobs:
                   fi
 
                   # single heredoc invocation (avoids nested heredoc parsing issues)
-                  sshpass -p "${DEPLOY_PASSWORD}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $PORT_ARG "${DEPLOY_USER}@${DEPLOY_HOST}" "${DEPLOY_PATH}" "bash -s" <<'REMOTE'
+                  # pass DEPLOY_PATH and DEPLOY_USER into the remote shell so the heredoc
+                  # can rely on them without needing local variable expansion inside the
+                  # single-quoted heredoc body.
+                  sshpass -p "${DEPLOY_PASSWORD}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $PORT_ARG "${DEPLOY_USER}@${DEPLOY_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_USER='${DEPLOY_USER}' bash -s" <<'REMOTE'
                     set -euo pipefail
                     echo "Deploying to $DEPLOY_PATH"
+
+                    # Ensure deployment directory exists and is owned by the deploy user
                     sudo mkdir -p "$DEPLOY_PATH"
-                    sudo tar -xzf /tmp/repo_deploy.tar.gz -C "$DEPLOY_PATH"
+                    sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH"
+
+                    # Extract tarball as the deploy user to avoid root-owned files
+                    sudo -u "${DEPLOY_USER}" tar -xzf /tmp/repo_deploy.tar.gz -C "$DEPLOY_PATH"
                     sudo rm -f /tmp/repo_deploy.tar.gz
-                    
-                    # Setup Solr
+
+                    # Setup Solr (if present) — keep as sudo since it may require root
                     echo "=========================================" 
                     echo "Setting up Apache Solr..."
                     echo "========================================="
@@ -126,21 +134,19 @@ jobs:
                     else
                       echo "WARNING: Solr setup script not found, skipping Solr setup"
                     fi
-                    
-                    # Install Python dependencies
+
+                    # Install Python dependencies inside a venv as the deploy user
                     echo "========================================="
                     echo "Installing Python dependencies..."
                     echo "========================================="
-                    if [ ! -d "$DEPLOY_PATH/.venv" ]; then python3 -m venv "$DEPLOY_PATH/.venv"; fi
-                    . "$DEPLOY_PATH/.venv/bin/activate"
-                    pip install --upgrade pip
-                    pip install -r "$DEPLOY_PATH/requirements.txt"
-                    
-                    # Index data into Solr
+                    sudo -u "${DEPLOY_USER}" bash -lc "cd '$DEPLOY_PATH' && python3 -m venv .venv || true"
+                    sudo -u "${DEPLOY_USER}" bash -lc "cd '$DEPLOY_PATH' && . .venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
+
+                    # Index data into Solr (run with venv as deploy user)
                     echo "========================================="
                     echo "Indexing data into Solr..."
                     echo "========================================="
-                    # Wait for Solr to be ready
+                    # Wait for Solr to be ready (up to 30 seconds)
                     for i in {1..30}; do
                       if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS" > /dev/null 2>&1; then
                         echo "Solr is ready"
@@ -152,23 +158,22 @@ jobs:
                       fi
                       sleep 1
                     done
-                    
-                    # Run indexing
-                    cd "$DEPLOY_PATH"
-                    python index_data.py || {
+
+                    # Run indexing inside the venv as deploy user
+                    sudo -u "${DEPLOY_USER}" bash -lc "cd '$DEPLOY_PATH' && . .venv/bin/activate && python index_data.py" || {
                       echo "ERROR: Data indexing failed"
                       exit 1
                     }
-                    
+
                     # Verify indexing
                     DOC_COUNT=$(curl -s "http://localhost:8983/solr/movies/select?q=*:*&rows=0" | grep -oP '"numFound":\K\d+' || echo "0")
                     echo "Indexed documents: $DOC_COUNT"
                     if [ "$DOC_COUNT" -eq 0 ]; then
                       echo "WARNING: No documents were indexed!"
                     fi
+
+                    # Restart services (keep sudo)
                     sudo systemctl restart heritage
-                    # trigger the indexer service to rebuild the enriched index (best-effort)
-                    # requires the deploy user to have NOPASSWD sudo for starting the unit, otherwise this will be ignored
                     sudo systemctl start heritage-indexer.service || true
                     echo "Remote deploy finished"
                   REMOTE
