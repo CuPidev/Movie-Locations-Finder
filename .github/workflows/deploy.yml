@@ -108,7 +108,7 @@ jobs:
                   fi
 
                   # single heredoc invocation (avoids nested heredoc parsing issues)
-                  sshpass -p "${DEPLOY_PASSWORD}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $PORT_ARG "${DEPLOY_USER}@${DEPLOY_HOST}" "bash -s" <<'REMOTE'
+                  sshpass -p "${DEPLOY_PASSWORD}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $PORT_ARG "${DEPLOY_USER}@${DEPLOY_HOST}" "${DEPLOY_PATH}" "bash -s" <<'REMOTE'
                     set -euo pipefail
                     echo "Deploying to $DEPLOY_PATH"
                     sudo mkdir -p "$DEPLOY_PATH"
