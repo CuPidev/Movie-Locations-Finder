@@ -13,14 +13,60 @@ def extract_titlemarkers(html):
     """
     Extracts the titlemarkers JS object from HTML as a Python dict.
     """
-    pattern = r"const\s+titlemarkers\s*=\s*(\{.*?\});"
-    match = re.search(pattern, html, re.DOTALL)
-    if not match:
+    # Find the `const titlemarkers = { ... };` block without using a single
+    # catastrophic regex. We locate the first '{' after the declaration and
+    # scan forward, balancing braces while respecting string literals so we
+    # don't stop on braces that appear inside strings.
+    start_idx = html.find("const titlemarkers")
+    if start_idx == -1:
         return None
-    js_object = match.group(1)
-    # Convert JS object to JSON: add quotes to keys, fix trailing commas
-    js_object_clean = re.sub(r"(\w+):", r'"\1":', js_object)
-    js_object_clean = re.sub(r",\s*}", "}", js_object_clean)
+    eq_idx = html.find("=", start_idx)
+    if eq_idx == -1:
+        return None
+    brace_idx = html.find("{", eq_idx)
+    if brace_idx == -1:
+        return None
+
+    i = brace_idx
+    depth = 0
+    in_string = False
+    string_char = None
+    escape = False
+    end_idx = None
+    while i < len(html):
+        ch = html[i]
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == string_char:
+                in_string = False
+                string_char = None
+        else:
+            if ch == '"' or ch == "'":
+                in_string = True
+                string_char = ch
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    end_idx = i
+                    break
+        i += 1
+
+    if end_idx is None:
+        return None
+
+    js_object = html[brace_idx : end_idx + 1]
+
+    # Convert JS-like object to JSON-ish string:
+    # - Quote unquoted keys (match typical identifier keys only)
+    # - Remove trailing commas before closing braces/brackets
+    js_object_clean = re.sub(r"(?P<key>[A-Za-z_][A-Za-z0-9_]*)\s*:", r'"\g<key>":', js_object)
+    js_object_clean = re.sub(r",\s*(?=[}\]])", "", js_object_clean)
+
     try:
         return json.loads(js_object_clean)
     except Exception:
@@ -60,9 +106,15 @@ def crawlMovieLocationsCA(
                 title_div.find("h2").get_text(strip=True) if title_div else None
             )
             img_src = img["src"] if img else None
-            item_id_match = re.search(r"tt(\d+)", img_src)
-            if item_id_match:
-                item_id = item_id_match.group(1)
+            item_id = None
+            if img_src:
+                m = re.search(r"tt(\d+)", img_src)
+                if m:
+                    item_id = m.group(1)
+
+            if not item_id:
+                rprint(f"[yellow]Skipping item with no id or image: {item_title}[/yellow]")
+                continue
 
             item_absolute_link = title_url + item_id
             if item_absolute_link in seen:
@@ -94,13 +146,14 @@ def crawlMovieLocationsCA(
             #     rprint("[cyan]Tu powinna być soupka[/cyan]")
 
             try:
-                locations = json_result[item_id]
+                if not json_result:
+                    raise KeyError("no json_result")
+                locations = json_result.get(item_id) or json_result.get(item_title)
                 if not locations:
-                    locations = json_result[item_title]
+                    raise KeyError("no locations")
             except Exception:
                 rprint(f"[red]No location data found for {item_title}. Skipping[/red]")
                 continue
-                locations = None
             for location in locations if locations else []:
                 # location list: [title, adress, lat, lon, desc]
                 # rprint(f"[cyan]Location data: {str(location)}[/cyan]")
@@ -176,6 +229,4 @@ async def testCA() -> None:
 
 
 if __name__ == "__main__":
-    crawlMovieLocationsCA()
-    crawlMovieLocationsCA()
     crawlMovieLocationsCA()
