@@ -173,7 +173,7 @@ export default function BrowsePage() {
                 {loading && <Box>Loading…</Box>}
                 {!loading && items.length === 0 && <Box>No items</Box>}
                 {items.map((it, i) => (
-                    <ResultsCard key={i} item={it} query={q} maxLen={400} onFindSimilar={handleFindSimilar} />
+                    <ResultsCard key={it.id || `item-${offset}-${i}`} item={it} query={q} maxLen={400} onFindSimilar={handleFindSimilar} />
                 ))}
             </Box>
             <Box

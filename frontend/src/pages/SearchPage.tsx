@@ -146,7 +146,7 @@ export default function SearchPage() {
                     {results.length === 0 && <Box>No results</Box>}
                     <Box>
                         {results.map((r, i) => (
-                            <ResultsCard key={i} item={r} query={q} onFindSimilar={handleFindSimilar} />
+                            <ResultsCard key={r.id || `search-result-${i}`} item={r} query={q} onFindSimilar={handleFindSimilar} />
                         ))}
                     </Box>
                 </Box>
