@@ -55,7 +55,9 @@ def crawlMovieLocationsCom(
     seen = load_seen_urls(output)
     rprint(f"[green]Loaded {len(seen)} seen URLs.[/green]")
 
-    soup = BeautifulSoup(requests.get(scrape_url_base).text, "html.parser")
+    response = requests.get(scrape_url_base)
+    response.encoding = 'utf-8'
+    soup = BeautifulSoup(response.text, "html.parser")
 
     content_container = soup.find("div", class_="content")
     if not content_container:
@@ -89,7 +91,9 @@ def crawlMovieLocationsCom(
         category_name = category_link.split("/")[-1].split("-")[0]
         # print(category_name)
 
-        category_soup = BeautifulSoup(requests.get(category_link).text, "html.parser")
+        category_response = requests.get(category_link)
+        category_response.encoding = 'utf-8'
+        category_soup = BeautifulSoup(category_response.text, "html.parser")
 
         category_menu = category_soup.find("div", id="multicolumn3")
 
@@ -112,7 +116,9 @@ def crawlMovieLocationsCom(
                 rprint(
                     f"[bold green]Starting to crawl {movie_link} page...[/bold green]"
                 )
-                movie_soup = BeautifulSoup(requests.get(movie_link).text, "html.parser")
+                movie_response = requests.get(movie_link)
+                movie_response.encoding = 'utf-8'
+                movie_soup = BeautifulSoup(movie_response.text, "html.parser")
 
                 movie_content = movie_soup.find("div", class_="content")
                 if not movie_content:
