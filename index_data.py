@@ -101,12 +101,12 @@ def index_data():
                 else:
                     # Create one document per location
                     for idx, loc in enumerate(locations):
-                        loc_name = loc.get("name", "")
-                        lat = loc.get("latitude")
-                        lon = loc.get("longitude")
-                        loc_address = loc.get("address", "")
-                        loc_description = loc.get("description", "")
-                        loc_image = loc.get("image", "")
+                        loc_name = loc.get("name") or "Unknown Location"
+                        lat = loc.get("latitude") or 0
+                        lon = loc.get("longitude") or 0
+                        loc_address = loc.get("address") or ""
+                        loc_description = loc.get("description") or ""
+                        loc_image = loc.get("image") or ""
                         
                         # Build unique ID for this location
                         loc_id = f"{movie_url}__loc_{idx}" if movie_url else f"loc_{len(solr_docs)}"

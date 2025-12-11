@@ -74,7 +74,7 @@ def extract_titlemarkers(html):
 
 
 def crawlMovieLocationsCA(
-    output_path: str = "data/moviefilminglocationsca.json",
+    output_path: str = "temp/moviefilminglocationsca.json",
 ) -> bool:
     base_url = "https://moviefilminglocations.ca"
     # menu works by appending the page number to all, like /all/2, /all/3, etc.
