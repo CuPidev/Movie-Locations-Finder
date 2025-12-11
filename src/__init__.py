@@ -1,3 +1,3 @@
-"""Heritage Sites Finder package"""
+"""Movie Sites Finder package"""
 
 __all__ = ["fetcher", "indexer", "cli"]

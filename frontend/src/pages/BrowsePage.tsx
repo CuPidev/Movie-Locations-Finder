@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import ResultsCard from "../components/ResultsCard";
+import SimilarDocumentsModal from "../components/SimilarDocumentsModal";
 
 function qs(key: string, fallback?: string) {
     const params = new URLSearchParams(location.search);
@@ -28,6 +29,23 @@ export default function BrowsePage() {
     const [total, setTotal] = useState(0);
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+
+    // Modal state for "More Like This"
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+    const [selectedItemTitle, setSelectedItemTitle] = useState<string | undefined>(undefined);
+
+    const handleFindSimilar = (id: string, title?: string) => {
+        setSelectedItemId(id);
+        setSelectedItemTitle(title);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedItemId(null);
+        setSelectedItemTitle(undefined);
+    };
 
     useEffect(() => {
         loadPage(offset, false);
@@ -91,10 +109,10 @@ export default function BrowsePage() {
     return (
         <Box>
             <Helmet>
-                <title>Heritage Sites Finder - Browse</title>
+                <title>Movie Sites Finder - Browse</title>
                 <meta
                     name="description"
-                    content="Browse UNESCO World Heritage sites"
+                    content="Browse Movie sites"
                 />
             </Helmet>
             <Box mb={3}>
@@ -155,7 +173,7 @@ export default function BrowsePage() {
                 {loading && <Box>Loading…</Box>}
                 {!loading && items.length === 0 && <Box>No items</Box>}
                 {items.map((it, i) => (
-                    <ResultsCard key={i} item={it} query={q} maxLen={400} />
+                    <ResultsCard key={it.id || `item-${offset}-${i}`} item={it} query={q} maxLen={400} onFindSimilar={handleFindSimilar} />
                 ))}
             </Box>
             <Box
@@ -200,6 +218,14 @@ export default function BrowsePage() {
                     </Button>
                 </Box>
             </Box>
+
+            {/* More Like This Modal */}
+            <SimilarDocumentsModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                documentId={selectedItemId}
+                documentTitle={selectedItemTitle}
+            />
         </Box>
     );
 }
