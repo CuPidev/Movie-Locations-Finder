@@ -119,9 +119,25 @@ def crawlMovieLocationsCom(
                     rprint(f"[red]Failed to find movie content in {movie_link}[/red]")
                     continue
 
+                # Try to find the movie poster image (usually has 'poster' in alt text)
+                movie_image = None
+                for img in movie_content.find_all("img"):
+                    alt_text = img.get("alt", "").lower()
+                    if "poster" in alt_text:
+                        img_src = img.get("src")
+                        if img_src:
+                            # Convert relative path to full URL
+                            if img_src.startswith("http"):
+                                movie_image = img_src
+                            else:
+                                # Build full URL from relative path
+                                movie_image = f"{scrape_movies_url}{category_name}/{img_src}"
+                        break
+
                 page_object = {
                     "url": movie_link,
                     "title": "",
+                    "image": movie_image,
                     "text_content": "",
                 }
 
