@@ -125,9 +125,18 @@ def crawlMovieLocationsCA(
             rprint("[blue]----------------------------------------[/blue]")
             print(f"Title: {item_title}, Link: {item_absolute_link}")
 
+            # Build full image URL
+            movie_image = None
+            if img_src:
+                if img_src.startswith("http"):
+                    movie_image = img_src
+                else:
+                    movie_image = f"{base_url}{img_src}" if img_src.startswith("/") else f"{base_url}/{img_src}"
+
             movie = {
                 "title": item_title,
                 "url": item_absolute_link,
+                "image": movie_image,
                 "text_content": "",
                 "locations": [],
             }
