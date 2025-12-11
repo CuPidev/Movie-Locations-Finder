@@ -62,18 +62,26 @@ def crawlCinemapper(output_path: str = "./temp/cinemapper.json") -> bool:
         if film_name not in films:
             # Construct deep link using slug from pages if available, else fallback to filmId
             movie_url = "https://cinemapper.com/browser"
+            movie_image = None
             if film_id and film_id in raw_pages:
-                slug = raw_pages[film_id].get('url')
+                page_data = raw_pages[film_id]
+                slug = page_data.get('url')
                 if slug:
                     movie_url = f"https://cinemapper.com/page/{slug}"
                 else:
                     movie_url = f"https://cinemapper.com/page/id/{film_id}"
+                # Get movie image from pages data
+                movie_image = page_data.get('image') or page_data.get('picture') or page_data.get('poster')
+                # Convert relative TMDB paths to full URLs
+                if movie_image and movie_image.startswith('/'):
+                    movie_image = f"https://image.tmdb.org/t/p/original{movie_image}"
             elif film_id:
                  movie_url = f"https://cinemapper.com/page/id/{film_id}"
             
             films[film_name] = {
                 "title": film_name,
                 "url": movie_url,
+                "image": movie_image,
                 "text_content": "",
                 "locations": []
             }
