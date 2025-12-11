@@ -94,4 +94,42 @@ class Indexer:
             return mlt_data.get("docs", [])
         return mlt_data
 
+    def group_by_location(self, query: str = None, limit: int = 10, group_limit: int = 5, **kwargs):
+        """Search with results grouped by location_name.
+        
+        Returns results grouped by location, showing multiple movies per location.
+        """
+        if query:
+            solr_query = f"title:({query}) OR content:({query}) OR location_name:({query})"
+        else:
+            solr_query = "*:*"
+        
+        params = {
+            "group": "true",
+            "group.field": "location_name",
+            "group.limit": group_limit,  # Max docs per group
+            "group.ngroups": "true",  # Return total number of groups
+            "rows": limit,  # Number of groups to return
+        }
+        params.update(kwargs)
+        
+        results = self.solr.search(solr_query, **params)
+        return results
+
+    def nearby_locations(self, lat: float, lon: float, radius_km: float = 50, limit: int = 20, **kwargs):
+        """Find filming locations within a radius of a point.
+        
+        Uses Solr's spatial search with geodist() function.
+        """
+        # Only query documents that have location coordinates
+        params = {
+            "fq": f"{{!geofilt sfield=location_pt pt={lat},{lon} d={radius_km}}}",
+            "sort": f"geodist(location_pt,{lat},{lon}) asc",  # Sort by distance
+            "fl": f"*, _dist_:geodist(location_pt,{lat},{lon})",  # Include distance in results
+            "rows": limit,
+        }
+        params.update(kwargs)
+        
+        results = self.solr.search("location_pt:*", **params)
+        return results
 

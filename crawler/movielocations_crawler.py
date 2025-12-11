@@ -1,10 +1,54 @@
 import json
+import re
+import time
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, Optional, Set, Tuple
 
 import requests
 from bs4 import BeautifulSoup
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from rich import print as rprint
+
+# Initialize geocoder with a custom user agent (required by Nominatim)
+_geocoder = Nominatim(user_agent="movie-locations-finder-crawler/1.0")
+
+# Cache for geocoding results to avoid repeated API calls
+_geocode_cache: Dict[str, Optional[Tuple[float, float, str]]] = {}
+
+
+def geocode_location(location_name: str) -> Optional[Tuple[float, float, str]]:
+    """Geocode a location name using OpenStreetMap Nominatim.
+    
+    Args:
+        location_name: The name of the location to geocode.
+        
+    Returns:
+        A tuple of (latitude, longitude, resolved_address) if found, None otherwise.
+        The resolved_address is the full address returned by the geocoding service.
+    """
+    # Check cache first
+    if location_name in _geocode_cache:
+        return _geocode_cache[location_name]
+    
+    try:
+        # Rate limit: 1 request per second (Nominatim policy)
+        time.sleep(1.0)
+        
+        location = _geocoder.geocode(location_name, timeout=10)
+        
+        if location:
+            result = (location.latitude, location.longitude, location.address)
+            _geocode_cache[location_name] = result
+            return result
+        else:
+            _geocode_cache[location_name] = None
+            return None
+            
+    except (GeocoderTimedOut, GeocoderServiceError) as e:
+        rprint(f"[yellow]Geocoding error for '{location_name}': {e}[/yellow]")
+        _geocode_cache[location_name] = None
+        return None
 
 """
 This crawler is specifically adjusted to scrape the data from movie-locations.com.
@@ -26,7 +70,9 @@ https://movie-locations.com/movies/t/Tenet-film-locations.php
 
 
 def crawlMovieLocationsCom(
-    save_to_db: bool = False, output: str = "./temp/movie_locations.json"
+    save_to_db: bool = False, 
+    output: str = "./temp/movie_locations.json",
+    max_pages: Optional[int] = None
 ) -> bool:
     """Crawler for movie-locations.com.
 
@@ -34,6 +80,7 @@ def crawlMovieLocationsCom(
         save_to_db: If True, use a provided database connection to save results. For now we are doing it raw dog style with files.
         output: Path to a CSV file where results would be written. Default
             is ``movie_locations.csv``.
+        max_pages: Maximum number of movie pages to crawl. If None, crawl all.
 
     Returns:
         True if the crawl completed successfully and the page parsed;
@@ -145,6 +192,7 @@ def crawlMovieLocationsCom(
                     "title": "",
                     "image": movie_image,
                     "text_content": "",
+                    "locations": [],
                 }
 
                 title_and_year_container = movie_content.find("h1")
@@ -160,17 +208,77 @@ def crawlMovieLocationsCom(
                 # year = title_and_year_container.find("span").text
                 page_object["title"] = title
 
-                text_description = [p.get_text() for p in movie_content.find_all("p")]
-                page_object["text_content"] = "\n".join(text_description)
+                # Extract locations from the page
+                # movie-locations.com marks location names with <span class="name"> tags
+                # Use a dict to deduplicate locations by name and collect descriptions
+                text_content_parts = []
+                locations_dict: Dict[str, Dict] = {}
+                
+                for p in movie_content.find_all("p"):
+                    p_text = p.get_text(strip=True)
+                    text_content_parts.append(p_text)
+
+                    # Look for location names in <span class="name"> tags
+                    name_spans = p.find_all("span", class_="name")
+                    if not name_spans:
+                        continue
+
+                    # Process each location name individually to avoid duplicates
+                    for span in name_spans:
+                        location_name = span.get_text(strip=True)
+                        if not location_name:
+                            continue
+                        
+                        if location_name in locations_dict:
+                            # Add description to existing location if not already present
+                            if p_text not in locations_dict[location_name]["descriptions"]:
+                                locations_dict[location_name]["descriptions"].append(p_text)
+                        else:
+                            # Create new location entry
+                            locations_dict[location_name] = {
+                                "name": location_name,
+                                "descriptions": [p_text],
+                            }
+                            rprint(f"[cyan]Found location: {location_name}[/cyan]")
+                
+                # Convert locations_dict to list, geocoding each to validate and get coordinates
+                # Locations that fail geocoding (like person names) are filtered out
+
+                # WARN: This takes a LONG time to run.
+                # rprint(f"[cyan]Geocoding {len(locations_dict)} potential locations...[/cyan]")
+                # for loc_data in locations_dict.values():
+                #     coords = geocode_location(loc_data["name"])
+                #     if coords:
+                #         page_object["locations"].append({
+                #             "name": loc_data["name"],
+                #             "address": coords[2],  # Resolved address from geocoding
+                #             "latitude": coords[0],
+                #             "longitude": coords[1],
+                #             "descriptions": loc_data["descriptions"],
+                #         })
+                #         rprint(f"[green]✓ Geocoded: {loc_data['name']} → {coords[2][:60]}...[/green]")
+                #     else:
+                #         rprint(f"[dim]✗ Filtered out (not a place): {loc_data['name']}[/dim]")
+
+                page_object["text_content"] = "\n".join(text_content_parts)
                 append_record(output, page_object)
                 pages_crawled.append(page_object)
                 rprint(f"[bold green]Crawled movie page: {title}[/bold green]")
+                
+                # Check if we've reached the max_pages limit
+                if max_pages is not None and len(pages_crawled) >= max_pages:
+                    rprint(f"[yellow]Reached max_pages limit ({max_pages}). Stopping crawl.[/yellow]")
+                    break
             else:
                 rprint("[red]No movie link sorry bud.[/red]")
                 rprint(f"[red]No link movie title: {category_item.text}[/red]")
                 rprint(
                     "[red]If we want to also have empty movie pages, we can change the code here[/red]"
                 )
+        
+        # Also check at the category level to break out of outer loop
+        if max_pages is not None and len(pages_crawled) >= max_pages:
+            break
 
     return True
 

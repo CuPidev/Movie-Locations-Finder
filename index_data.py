@@ -75,20 +75,70 @@ def index_data():
                 print(f"No valid documents found in {data_path}, skipping.")
                 continue
 
-            print(f"Found {len(documents)} documents in {os.path.basename(data_path)}.")
+            print(f"Found {len(documents)} movies in {os.path.basename(data_path)}.")
 
-            # Prepare documents for Solr
+            # Prepare documents for Solr - one document per LOCATION (not per movie)
+            # This enables grouping by location and spatial queries
             solr_docs = []
-            for i, doc in enumerate(documents):
-                solr_doc = {
-                    "id": doc.get("url", f"doc_{i}_{os.path.basename(data_path)}"),
-                    "title": doc.get("title", ""),
-                    "content": doc.get("text_content", ""),
-                    "url": doc.get("url", ""),
-                    "country": doc.get("country", ""),
-                    "image": doc.get("image", "")
-                }
-                solr_docs.append(solr_doc)
+            for doc in documents:
+                movie_title = doc.get("title", "")
+                movie_url = doc.get("url", "")
+                movie_image = doc.get("image", "")
+                movie_content = doc.get("text_content", "")
+                locations = doc.get("locations", [])
+                
+                if not locations:
+                    # Movie with no locations - create a single document
+                    solr_docs.append({
+                        "id": movie_url or f"movie_{len(solr_docs)}",
+                        "movie_title": movie_title,
+                        "title": movie_title,  # Keep for backwards compatibility
+                        "content": movie_content,
+                        "url": movie_url,
+                        "movie_image": movie_image,
+                        "image": movie_image,
+                    })
+                else:
+                    # Create one document per location
+                    for idx, loc in enumerate(locations):
+                        loc_name = loc.get("name", "")
+                        lat = loc.get("latitude")
+                        lon = loc.get("longitude")
+                        loc_address = loc.get("address", "")
+                        loc_description = loc.get("description", "")
+                        loc_image = loc.get("image", "")
+                        
+                        # Build unique ID for this location
+                        loc_id = f"{movie_url}__loc_{idx}" if movie_url else f"loc_{len(solr_docs)}"
+                        
+                        solr_doc = {
+                            "id": loc_id,
+                            "location_name": loc_name,
+                            "location_address": loc_address,
+                            "location_description": loc_description,
+                            "location_image": loc_image,
+                            "movie_title": movie_title,
+                            "title": f"{loc_name} - {movie_title}",  # Combined for search
+                            "content": f"{loc_description} {movie_content}",
+                            "url": movie_url,
+                            "movie_image": movie_image,
+                            "image": loc_image or movie_image,
+                        }
+                        
+                        # Add spatial field if valid coordinates exist
+                        if lat is not None and lon is not None:
+                            try:
+                                lat_f = float(lat)
+                                lon_f = float(lon)
+                                # Only add if coordinates are valid (not 0,0 which is often missing data)
+                                if not (lat_f == 0 and lon_f == 0):
+                                    solr_doc["location_pt"] = f"{lat_f},{lon_f}"
+                                    solr_doc["latitude"] = lat_f
+                                    solr_doc["longitude"] = lon_f
+                            except (ValueError, TypeError):
+                                pass  # Skip invalid coordinates
+                        
+                        solr_docs.append(solr_doc)
 
             batch_size = 100
             print(f"Indexing {len(solr_docs)} documents...")

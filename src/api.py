@@ -134,6 +134,73 @@ def create_app(static_folder: Optional[str] = None):
                 ]
             }
 
+    @app.route("/api/locations/grouped")
+    def locations_grouped():
+        """Search with results grouped by location name."""
+        q = request.args.get("q", "")
+        try:
+            limit = int(request.args.get("limit", "10") or "10")
+        except Exception:
+            limit = 10
+        try:
+            group_limit = int(request.args.get("group_limit", "5") or "5")
+        except Exception:
+            group_limit = 5
+            
+        indexer = Indexer()
+        try:
+            results = indexer.group_by_location(query=q or None, limit=limit, group_limit=group_limit)
+            # Parse grouped response - pysolr returns grouped results differently
+            raw = results.raw_response
+            grouped = raw.get("grouped", {}).get("location_name", {})
+            groups = grouped.get("groups", [])
+            n_groups = grouped.get("ngroups", len(groups))
+            
+            # Format response
+            formatted_groups = []
+            for g in groups:
+                formatted_groups.append({
+                    "location_name": g.get("groupValue", "Unknown"),
+                    "count": g.get("doclist", {}).get("numFound", 0),
+                    "movies": g.get("doclist", {}).get("docs", [])
+                })
+            
+            return {"total_locations": n_groups, "groups": formatted_groups}
+        except Exception as e:
+            print(f"Grouped search failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e), "total_locations": 0, "groups": []}
+
+    @app.route("/api/locations/nearby")
+    def locations_nearby():
+        """Find filming locations near a geographic point."""
+        try:
+            lat = float(request.args.get("lat", "0"))
+            lon = float(request.args.get("lon", "0"))
+        except (ValueError, TypeError):
+            return {"error": "Invalid lat/lon parameters"}, 400
+            
+        try:
+            radius = float(request.args.get("radius", "50"))
+        except Exception:
+            radius = 50
+        try:
+            limit = int(request.args.get("limit", "20") or "20")
+        except Exception:
+            limit = 20
+            
+        indexer = Indexer()
+        try:
+            results = indexer.nearby_locations(lat=lat, lon=lon, radius_km=radius, limit=limit)
+            items = [dict(d) for d in results]
+            return {"results": items, "center": {"lat": lat, "lon": lon}, "radius_km": radius}
+        except Exception as e:
+            print(f"Nearby locations search failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e), "results": []}
+
     return app
 
 
