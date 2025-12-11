@@ -67,85 +67,110 @@ export default function ResultsCard({ item, query, maxLen = 800, onFindSimilar }
             transitionProperty="max-height"
             transitionDuration="220ms"
         >
-            <div className="result-header flex items-center justify-between mb-2">
-                <div>
-                    <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:underline"
-                    >
-                        <div
-                            id={item.id ? `title-${item.id}` : undefined}
-                            className="result-title font-semibold text-lg"
-                            dangerouslySetInnerHTML={{
-                                __html: highlightText(
-                                    item.title || "(no title)",
-                                    query
-                                ),
+            <div className="result-content-wrapper" style={{ display: "flex", gap: "1rem" }}>
+                {/* Movie Poster */}
+                {item.image && (
+                    <div className="result-poster" style={{ flexShrink: 0 }}>
+                        <img
+                            src={item.image}
+                            alt={`${item.title || "Movie"} poster`}
+                            style={{
+                                width: "80px",
+                                height: "120px",
+                                objectFit: "cover",
+                                borderRadius: "6px",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                            }}
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = "none";
                             }}
                         />
-                    </a>
-                </div>
-                <div className="flex items-center gap-2">
-                    {item.country && (
-                        <span className="country-badge bg-muted px-2 py-0.5 rounded text-xs">
-                            {item.country}
-                        </span>
+                    </div>
+                )}
+
+                {/* Main Content */}
+                <div className="result-main" style={{ flex: 1, minWidth: 0 }}>
+                    <div className="result-header flex items-center justify-between mb-2">
+                        <div>
+                            <a
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                            >
+                                <div
+                                    id={item.id ? `title-${item.id}` : undefined}
+                                    className="result-title font-semibold text-lg"
+                                    dangerouslySetInnerHTML={{
+                                        __html: highlightText(
+                                            item.title || "(no title)",
+                                            query
+                                        ),
+                                    }}
+                                />
+                            </a>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {item.country && (
+                                <span className="country-badge bg-muted px-2 py-0.5 rounded text-xs">
+                                    {item.country}
+                                </span>
+                            )}
+                            {typeof item.score === "number" && (
+                                <span className="score text-xs text-muted-foreground">
+                                    [{item.score.toFixed(3)}]
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    <p
+                        className="description mb-2"
+                        dangerouslySetInnerHTML={{ __html: displayedHtml }}
+                    />
+
+                    <div className="meta text-xs text-muted-foreground mb-2">
+                        {item.id ? `id: ${item.id}` : ""}
+                    </div>
+
+                    {/* Find Similar button - top right */}
+                    {onFindSimilar && item.id && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="find-similar px-3 py-1 text-xs"
+                            position="absolute"
+                            right={3}
+                            top={3}
+                            borderColor="var(--accent)"
+                            color="var(--accent-700)"
+                            onClick={handleFindSimilar}
+                            size="sm"
+                            zIndex={1}
+                        >
+                            🔍 Find Similar
+                        </Button>
                     )}
-                    {typeof item.score === "number" && (
-                        <span className="score text-xs text-muted-foreground">
-                            [{item.score.toFixed(3)}]
-                        </span>
+
+                    {/* Show more button - bottom right */}
+                    {shouldHaveToggle && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="show-more px-3 py-1 text-xs"
+                            position="absolute"
+                            right={3}
+                            bottom={3}
+                            borderColor="var(--accent)"
+                            color="var(--accent-700)"
+                            onClick={() => setExpanded((s) => !s)}
+                            size="sm"
+                        >
+                            {expanded ? "Show less" : "Show more"}
+                        </Button>
                     )}
                 </div>
             </div>
-
-            <p
-                className="description mb-2"
-                dangerouslySetInnerHTML={{ __html: displayedHtml }}
-            />
-
-            <div className="meta text-xs text-muted-foreground mb-2">
-                {item.id ? `id: ${item.id}` : ""}
-            </div>
-
-            {/* Find Similar button - top right */}
-            {onFindSimilar && item.id && (
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="find-similar px-3 py-1 text-xs"
-                    position="absolute"
-                    right={3}
-                    top={3}
-                    borderColor="var(--accent)"
-                    color="var(--accent-700)"
-                    onClick={handleFindSimilar}
-                    size="sm"
-                    zIndex={1}
-                >
-                    🔍 Find Similar
-                </Button>
-            )}
-
-            {/* Show more button - bottom right */}
-            {shouldHaveToggle && (
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="show-more px-3 py-1 text-xs"
-                    position="absolute"
-                    right={3}
-                    bottom={3}
-                    borderColor="var(--accent)"
-                    color="var(--accent-700)"
-                    onClick={() => setExpanded((s) => !s)}
-                    size="sm"
-                >
-                    {expanded ? "Show less" : "Show more"}
-                </Button>
-            )}
         </Box>
     );
 }

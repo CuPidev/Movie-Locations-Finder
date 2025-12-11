@@ -85,7 +85,8 @@ def index_data():
                     "title": doc.get("title", ""),
                     "content": doc.get("text_content", ""),
                     "url": doc.get("url", ""),
-                    "country": doc.get("country", "")
+                    "country": doc.get("country", ""),
+                    "image": doc.get("image", "")
                 }
                 solr_docs.append(solr_doc)
 
