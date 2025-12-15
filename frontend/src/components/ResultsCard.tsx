@@ -1,4 +1,4 @@
-import { Box, Button, Wrap, WrapItem, Tag, TagLabel } from "@chakra-ui/react";
+import { Box, Button, Tag, TagLabel, Wrap, WrapItem } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 
 const MIN_SHOW_MORE_CHARS = 220;
@@ -38,7 +38,13 @@ interface ResultsCardProps {
     onFindSimilar?: (id: string, title?: string) => void;
 }
 
-export default function ResultsCard({ item, query, maxLen = 800, clusters, onFindSimilar }: ResultsCardProps) {
+export default function ResultsCard({
+    item,
+    query,
+    maxLen = 800,
+    clusters,
+    onFindSimilar,
+}: ResultsCardProps) {
     const fullText: string = item.content || "";
     const shortText: string =
         fullText.length > maxLen
@@ -68,9 +74,12 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
             transitionProperty="max-height"
             transitionDuration="220ms"
         >
-            <div className="result-content-wrapper" style={{ display: "flex", gap: "1rem" }}>
+            <div
+                className="result-content-wrapper"
+                style={{ display: "flex", gap: "1rem" }}
+            >
                 {/* Movie Poster */}
-                {item.image && (
+                {item.image ? (
                     <div className="result-poster" style={{ flexShrink: 0 }}>
                         <img
                             src={item.image}
@@ -83,9 +92,16 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                                 boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                             }}
                             onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none";
+                                (e.target as HTMLImageElement).style.display =
+                                    "none";
                             }}
                         />
+                    </div>
+                ) : (
+                    <div className="result-poster" style={{ flexShrink: 0 }}>
+                        <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
+                            <span className="text-gray-400">No Image</span>
+                        </div>
                     </div>
                 )}
 
@@ -100,7 +116,9 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                                 className="hover:underline"
                             >
                                 <div
-                                    id={item.id ? `title-${item.id}` : undefined}
+                                    id={
+                                        item.id ? `title-${item.id}` : undefined
+                                    }
                                     className="result-title font-semibold text-lg"
                                     dangerouslySetInnerHTML={{
                                         __html: highlightText(
@@ -142,7 +160,10 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                             </Box>
                             <span
                                 dangerouslySetInnerHTML={{
-                                    __html: highlightText(item.location_description, query),
+                                    __html: highlightText(
+                                        item.location_description,
+                                        query
+                                    ),
                                 }}
                             />
                         </Box>
@@ -156,10 +177,17 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                     {/* Cluster Tags */}
                     {clusters && clusters.length > 0 && (
                         <Wrap spacing={2} mb={2}>
-                            {clusters.map(label => (
+                            {clusters.map((label) => (
                                 <WrapItem key={label}>
-                                    <Tag size="sm" variant="solid" colorScheme="gray" borderRadius="full">
-                                        <TagLabel fontSize="xs">{label}</TagLabel>
+                                    <Tag
+                                        size="sm"
+                                        variant="solid"
+                                        colorScheme="gray"
+                                        borderRadius="full"
+                                    >
+                                        <TagLabel fontSize="xs">
+                                            {label}
+                                        </TagLabel>
                                     </Tag>
                                 </WrapItem>
                             ))}
