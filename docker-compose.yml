@@ -8,7 +8,8 @@ services:
       - SOLR_MODULES=clustering
     volumes:
       - solr_data:/var/solr
-    command: [ "solr-precreate", "movies" ]
+      - ./solr-lib:/var/solr/data/movies/lib
+    command: [ "solr-precreate", "movies", "-Dsolr.modules=clustering", "-Dsolr.clustering.enabled=true" ]
 
 volumes:
   solr_data:
