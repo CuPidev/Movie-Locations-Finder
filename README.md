@@ -16,7 +16,7 @@
 ## Installation
 
 ### 1. Python Environment Setup
-Create virtual enviornment for python and install python dependencies (or be a gigachad and do it globally)
+Create virtual enviornment for python 3.10 or newer and install python dependencies (or be a gigachad and do it globally)
 
 ```bash
 pip install -r requirements.txt
