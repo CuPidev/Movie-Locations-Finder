@@ -99,8 +99,25 @@ export default function ResultsCard({
                     </div>
                 ) : (
                     <div className="result-poster" style={{ flexShrink: 0 }}>
-                        <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
-                            <span className="text-gray-400">No Image</span>
+                        <div
+                            style={{
+                                width: "80px",
+                                height: "120px",
+                                backgroundColor: "#e5e7eb", // Tailwind gray-200
+                                borderRadius: "6px",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "0.95rem",
+                                color: "#a1a1aa", // Tailwind gray-400
+                                fontStyle: "italic",
+                                userSelect: "none",
+                                animation:
+                                    "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                            }}
+                        >
+                            No Image
                         </div>
                     </div>
                 )}
