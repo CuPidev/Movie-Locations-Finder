@@ -24,7 +24,7 @@ pip install -r requirements.txt
 
 ### 2. Frontend Compilation
 
-Go into the frontend dir
+Make sure you have node and yarn installed. Go into the frontend dir
 
 ```bash
 cd ./frontend
