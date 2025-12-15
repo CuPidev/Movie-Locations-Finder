@@ -125,13 +125,20 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                         </div>
                     </div>
 
-                    {/* Explicit Address and Description */}
-                    {item.location_address && (
-                        <Box mb={2} fontSize="sm">
-                            <Box as="span" fontWeight="bold">
-                                Address:{" "}
+                    {/* Explicit Coordinates (instead of Address) */}
+                    {(item.latitude || item.longitude) && (
+                        <Box mb={2} fontSize="xs" fontFamily="monospace" color="gray.600">
+                            <Box as="span" fontWeight="bold" fontFamily="sans-serif">
+                                Coordinates:{" "}
                             </Box>
-                            {item.location_address}
+                            <a
+                                href={`https://www.google.com/maps?q=${item.latitude},${item.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: "var(--accent-700)", textDecoration: "underline", cursor: "pointer" }}
+                            >
+                                📍 {Number(item.latitude).toFixed(4)}, {Number(item.longitude).toFixed(4)}
+                            </a>
                         </Box>
                     )}
 
@@ -147,10 +154,13 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                             />
                         </Box>
                     ) : (
-                        <p
-                            className="description mb-2"
-                            dangerouslySetInnerHTML={{ __html: displayedHtml }}
-                        />
+                        /* Only show fallback description if it's NOT a location result (meaning no specific address/name found) */
+                        (!item.location_address && !item.location_name) && (
+                            <p
+                                className="description mb-2"
+                                dangerouslySetInnerHTML={{ __html: displayedHtml }}
+                            />
+                        )
                     )}
 
                     {/* Cluster Tags */}
