@@ -31,7 +31,7 @@ six==1.17.0
 soupsieve==2.8
 threadpoolctl==3.6.0
 typing_extensions==4.15.0
-urllib3==2.5.0
+urllib3==2.6.0
 webencodings==0.5.1
 Werkzeug==3.1.4
 wheel==0.45.1
