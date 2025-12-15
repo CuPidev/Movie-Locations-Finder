@@ -1,6 +1,6 @@
 # Solr Deployment Workflow
 
-This document explains how Apache Solr is integrated into the GitHub Actions deployment workflow for the Heritage Sites Finder project.
+This document explains how Apache Solr is integrated into the GitHub Actions deployment workflow for the Movie Sites Finder project.
 
 ## Overview
 
@@ -89,7 +89,7 @@ sudo systemctl status solr     # Check status
 sudo journalctl -u solr -f     # View logs
 ```
 
-### `heritage.service`
+### `movie.service`
 Manages the Flask application.
 
 ## Deployment Secrets

@@ -1,42 +1,50 @@
-# Movie locations finder Search Engine - MLFSE
+# Movie Locations Finder Search Engine (MLFSE)
 
-## Quick start
+## Repository Structure
 
--   Create virtual enviornment for python (or be a gigachad and do it globally)
--   Install python dependencies
+- `src/`: Backend source code and API logic.
+- `frontend/`: Frontend React application.
+- `crawler/`: Scripts for scraping movie location data.
+- `data/`: JSON files containing scraped data ready for indexing.
+- `deployment/`: Deployment configurations and documentation.
+- `index_data.py`: Script to index JSON data into Solr.
+- `run_api.py`: Entry point to start the Flask API server, which serves the application.
+- `docker-compose.yml`: Docker configuration for running Solr.
+
+
+
+## Installation
+
+### 1. Python Environment Setup
+Create virtual enviornment for python 3.10 or newer and install python dependencies (or be a gigachad and do it globally)
 
 ```bash
 pip install -r requirements.txt
 ```
 
--   Go into the frontend dir
+### 2. Frontend Compilation
+
+Make sure you have node and yarn installed. Go into the frontend dir
 
 ```bash
 cd ./frontend
 ```
 
--   Install frontend dependencies
+Install frontend dependencies
 
 ```bash
 yarn install
 ```
 
--   Build the frontend
+Build the frontend
 
 ```bash
 yarn build
 ```
 
--   Scrape the date
-```bash
-python ./crawler/crawler.py
-```
+### 3. Apache Solr Setup
 
-## Apache Solr Setup
-
-This project uses Apache Solr for search functionality. The Solr core is named `movies`.
-
-### Running Solr Locally
+This project uses Apache Solr for search functionality. To install Solr and create the `movies` core, follow one of the options below. Java 11+ is required to be installed.
 
 **Option 1: Using Docker (Recommended)**
 
@@ -46,50 +54,67 @@ docker-compose up -d
 
 **Option 2: Manual Installation**
 
+[Download Solr](https://solr.apache.org/downloads.html), extract it, and run the following from the `bin` directory:
+
 ```bash
-# Set JAVA_HOME (Windows PowerShell)
-$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-17.0.11.9-hotspot"
-
-# Start Solr
-cd solr-9.10.0\bin
+# Windows
 .\solr.cmd start
-
-# Create the movies core (first time only)
 .\solr.cmd create -c movies
+
+# Linux/MacOS
+./solr start
+./solr create -c movies
 ```
 
-### Indexing Data
+**Option 3: Using Homebrew (MacOS)**
 
-After Solr is running:
+```bash
+brew install solr
+solr start
+solr create -c movies
+```
+
+
+The Solr admin UI should now be available at `http://localhost:8983/solr/`.
+
+### 4. Indexing Data
+
+The repository already contains data that is ready to be indexed in the `data` directory. This data has been scraped from the following sources:
+
+1. movie-locations.com
+2. cinemapper.com
+3. TO BE ADDED
+
+Before running the indexer, make sure Solr is running. Then run:
 
 ```bash
 python index_data.py
 ```
 
-### Solr Admin UI
+### 5. Scraping for New Data (Optional)
 
-`http://localhost:8983/solr/`
-
-### VPS Deployment
-
-The GitHub Actions workflow automatically sets up Solr, creates the `movies` core, and indexes data. See `deployment/DEPLOYMENT.md` for details.
-
--   Run the API
+To get updated data, run the crawler using 
 
 ```bash
-cd ..
+python ./crawler/movielocations_crawler.py
+python ./crawler/cinemapper_crawler.py
+```
+
+after which new data will be available in the `temp` directory. Move the files from `temp` to `data` and run the indexer again.
+
+### 6. Run the App
+
+```bash
 python run_api.py
 ```
 
 The app will be available at 127.0.0.1:5000 by default
 
-## Structure
+## VPS Deployment
 
-Sample movie location data in movie_locations.json \
-Crawler for movie locations com in ./crawler dir
+The GitHub Actions workflow automatically sets up Solr, creates the `movies` core, and indexes data. See `deployment/DEPLOYMENT.md` for details.
 
-
-### Troubleshooting
+## Troubleshooting
 
 **No search results?**
 ```bash

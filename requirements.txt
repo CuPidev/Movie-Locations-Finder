@@ -4,7 +4,6 @@ certifi==2025.10.5
 charset-normalizer==3.4.4
 click==8.3.0
 colorama==0.4.6
-docformatter==1.7.7
 Flask==3.1.2
 flask-cors==6.0.1
 html5lib==1.1
@@ -32,9 +31,11 @@ six==1.17.0
 soupsieve==2.8
 threadpoolctl==3.6.0
 typing_extensions==4.15.0
-untokenize==0.1.1
 urllib3==2.5.0
 webencodings==0.5.1
 Werkzeug==3.1.4
 wheel==0.45.1
 pysolr==3.10.0
+geopy==2.4.1
+# docformatter==1.7.7    doesn't install on python 3.14
+# untokenize==0.1.1    doesn't install on python 3.14

@@ -28,15 +28,20 @@ def create_app(static_folder: Optional[str] = None):
 
         indexer = Indexer()
         try:
-            results = indexer.search(query)
-            print(f"[DEBUG] Search returned: {results}")
-            print(f"[DEBUG] Results type: {type(results)}")
-            # Convert results to list of dicts
-            results_list = []
-            for doc in results:
-                results_list.append(dict(doc))
-            print(f"[DEBUG] Converted to list, length: {len(results_list)}")
-            return {"results": results_list}
+            results = indexer.search(query, clustering=True)
+            
+            # Extract clusters from raw response
+            clusters = []
+            if hasattr(results, "raw_response"):
+                # Structure: {..., "clusters": [{"labels": ["Topic"], "docs": ["id1",...]}, ...]}
+                raw_clusters = results.raw_response.get("clusters", [])
+                for c in raw_clusters:
+                    labels = c.get("labels", [])
+                    docs = c.get("docs", [])
+                    if labels and docs:
+                        clusters.append({"labels": labels, "docs": docs})
+
+            return {"results": results.docs, "clusters": clusters}
         except Exception as e:
             print(f"Search failed: {e}")
             import traceback
@@ -47,17 +52,13 @@ def create_app(static_folder: Optional[str] = None):
                 "results": [
                     {
                         "id": "mock-1",
-                        "name": "Mock Heritage Site (Solr Unavailable)",
-                        "description": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
-                        "country": "Demo Land",
-                        "score": 1.0,
+                        "title": "Mock Movie (Solr Unavailable)",
+                        "content": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
                     },
                     {
                         "id": "mock-2",
-                        "name": "Another Mock Site",
-                        "description": "Solr integration is implemented, but the server is offline.",
-                        "country": "Test Country",
-                        "score": 0.8,
+                        "title": "Another Mock Movie",
+                        "content": "Solr integration is implemented, but the server is offline.",
                     },
                 ]
             }
@@ -102,7 +103,7 @@ def create_app(static_folder: Optional[str] = None):
                 "items": [
                     {
                         "id": "mock-1",
-                        "title": "Mock Heritage Site (Solr Unavailable)",
+                        "title": "Mock Movie (Solr Unavailable)",
                         "content": "This is a mock result because the Solr server could not be reached. Please ensure Apache Solr is running.",
                         "country": "Demo Land",
                         "score": 1.0,
@@ -116,6 +117,101 @@ def create_app(static_folder: Optional[str] = None):
                     },
                 ],
             }
+            
+    @app.route("/api/more-like-this")
+    def more_like_this():
+        doc_id = request.args.get("id")
+        if not doc_id:
+            return {"error": "Missing 'id' parameter"}, 400
+            
+        indexer = Indexer()
+        try:
+            results = indexer.more_like_this(doc_id)
+            # pysolr more_like_this returns a specialized object, but usually it behaves mostly like results
+            # The structure might differ slightly depending on pysolr version, but usually it's iterable
+            items = [dict(d) for d in results]
+            return {"results": items}
+        except Exception as e:
+            print(f"More Like This failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "results": [
+                    {
+                        "id": "mock-sim-1",
+                        "title": "Similar Mock Movie",
+                        "content": "Simulated similar content because Solr failed.",
+                        "score": 0.9
+                    }
+                ]
+            }
+
+    @app.route("/api/locations/grouped")
+    def locations_grouped():
+        """Search with results grouped by location name."""
+        q = request.args.get("q", "")
+        try:
+            limit = int(request.args.get("limit", "10") or "10")
+        except Exception:
+            limit = 10
+        try:
+            group_limit = int(request.args.get("group_limit", "5") or "5")
+        except Exception:
+            group_limit = 5
+            
+        indexer = Indexer()
+        try:
+            results = indexer.group_by_location(query=q or None, limit=limit, group_limit=group_limit)
+            # Parse grouped response - pysolr returns grouped results differently
+            raw = results.raw_response
+            grouped = raw.get("grouped", {}).get("location_name", {})
+            groups = grouped.get("groups", [])
+            n_groups = grouped.get("ngroups", len(groups))
+            
+            # Format response
+            formatted_groups = []
+            for g in groups:
+                formatted_groups.append({
+                    "location_name": g.get("groupValue", "Unknown"),
+                    "count": g.get("doclist", {}).get("numFound", 0),
+                    "movies": g.get("doclist", {}).get("docs", [])
+                })
+            
+            return {"total_locations": n_groups, "groups": formatted_groups}
+        except Exception as e:
+            print(f"Grouped search failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e), "total_locations": 0, "groups": []}
+
+    @app.route("/api/locations/nearby")
+    def locations_nearby():
+        """Find filming locations near a geographic point."""
+        try:
+            lat = float(request.args.get("lat", "0"))
+            lon = float(request.args.get("lon", "0"))
+        except (ValueError, TypeError):
+            return {"error": "Invalid lat/lon parameters"}, 400
+            
+        try:
+            radius = float(request.args.get("radius", "50"))
+        except Exception:
+            radius = 50
+        try:
+            limit = int(request.args.get("limit", "20") or "20")
+        except Exception:
+            limit = 20
+            
+        indexer = Indexer()
+        try:
+            results = indexer.nearby_locations(lat=lat, lon=lon, radius_km=radius, limit=limit)
+            items = [dict(d) for d in results]
+            return {"results": items, "center": {"lat": lat, "lon": lon}, "radius_km": radius}
+        except Exception as e:
+            print(f"Nearby locations search failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e), "results": []}
 
     return app
 
