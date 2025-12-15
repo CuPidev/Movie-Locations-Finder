@@ -26,9 +26,15 @@ def create_app(static_folder: Optional[str] = None):
         if not query:
             return {"results": []}
 
+        # Get the number of results to return (k parameter)
+        try:
+            k = int(request.args.get("k", "10") or "10")
+        except Exception:
+            k = 10
+
         indexer = Indexer()
         try:
-            results = indexer.search(query, clustering=True)
+            results = indexer.search(query, clustering=True, rows=k)
             
             # Extract clusters from raw response
             clusters = []
