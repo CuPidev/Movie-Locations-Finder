@@ -1,4 +1,3 @@
-version: '3'
 services:
   solr:
     image: solr:latest
@@ -6,10 +5,11 @@ services:
       - "8983:8983"
     environment:
       - SOLR_MODULES=clustering
+      - SOLR_OPTS=-Dsolr.clustering.enabled=true
     volumes:
       - solr_data:/var/solr
-      - ./solr-lib:/var/solr/data/movies/lib
-    command: [ "solr-precreate", "movies", "-Dsolr.modules=clustering", "-Dsolr.clustering.enabled=true" ]
+
+    command: [ "solr-precreate", "movies" ]
 
 volumes:
   solr_data:
