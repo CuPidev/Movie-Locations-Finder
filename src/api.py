@@ -28,8 +28,20 @@ def create_app(static_folder: Optional[str] = None):
 
         indexer = Indexer()
         try:
-            results = indexer.search(query)
-            return {"results": results.docs}
+            results = indexer.search(query, clustering=True)
+            
+            # Extract clusters from raw response
+            clusters = []
+            if hasattr(results, "raw_response"):
+                # Structure: {..., "clusters": [{"labels": ["Topic"], "docs": ["id1",...]}, ...]}
+                raw_clusters = results.raw_response.get("clusters", [])
+                for c in raw_clusters:
+                    labels = c.get("labels", [])
+                    docs = c.get("docs", [])
+                    if labels and docs:
+                        clusters.append({"labels": labels, "docs": docs})
+
+            return {"results": results.docs, "clusters": clusters}
         except Exception as e:
             print(f"Search failed: {e}")
             import traceback

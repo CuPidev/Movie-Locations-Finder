@@ -119,7 +119,7 @@ def index_data():
                             "location_image": loc_image,
                             "movie_title": movie_title,
                             "title": f"{loc_name} - {movie_title}",  # Combined for search
-                            "content": f"{loc_description} {movie_content}",
+                            "content": f"{loc_name} {loc_address} {loc_description}",
                             "url": movie_url,
                             "movie_image": movie_image,
                             "image": loc_image or movie_image,

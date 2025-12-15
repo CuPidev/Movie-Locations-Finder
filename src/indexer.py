@@ -26,11 +26,15 @@ class Indexer:
         """
         self.solr.delete(q="*:*")
 
-    def search(self, query: str, **kwargs):
+    def search(self, query: str, clustering: bool = False, **kwargs):
         # Search across title and content fields
         # Use Solr's query syntax to search multiple fields
         solr_query = f"title:({query}) OR content:({query})"
-        return self.solr.search(solr_query, **kwargs)
+        params = kwargs.copy()
+        if clustering:
+            params["clustering"] = "true"
+        
+        return self.solr.search(solr_query, **params)
 
     def browse(
         self,

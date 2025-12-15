@@ -16,7 +16,7 @@
 ## Installation
 
 ### 1. Python Environment Setup
-Create virtual enviornment for python and install python dependencies (or be a gigachad and do it globally)
+Create virtual enviornment for python 3.10 or newer and install python dependencies (or be a gigachad and do it globally)
 
 ```bash
 pip install -r requirements.txt
@@ -24,7 +24,7 @@ pip install -r requirements.txt
 
 ### 2. Frontend Compilation
 
-Go into the frontend dir
+Make sure you have node and yarn installed. Go into the frontend dir
 
 ```bash
 cd ./frontend
