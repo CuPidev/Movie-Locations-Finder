@@ -141,17 +141,21 @@ for i in {1..30}; do
   sleep 1
 done
 
-# 8. Create core (NO schema.xml)
-echo "[8/8] Creating core '$SOLR_CORE'..."
+# 8. Recreate core to ensure config is applied
+echo "[8/8] Recreating Solr core '$SOLR_CORE'..."
 
-if ! curl -s "http://localhost:$SOLR_PORT/solr/$SOLR_CORE/admin/ping" >/dev/null; then
-  sudo -u "$SOLR_USER" "$SOLR_DIR/bin/solr" create \
-    -c "$SOLR_CORE" \
-    -d "$CORE_CONF_DIR"
-  echo "✓ Core created"
-else
-  echo "✓ Core already exists"
+if curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=STATUS&core=$SOLR_CORE" \
+  | grep -q "\"name\":\"$SOLR_CORE\""; then
+  echo "Core exists — deleting"
+  sudo -u "$SOLR_USER" "$SOLR_DIR/bin/solr" delete -c "$SOLR_CORE"
+  sleep 2
 fi
+
+sudo -u "$SOLR_USER" "$SOLR_DIR/bin/solr" create \
+  -c "$SOLR_CORE" \
+  -d "/var/solr/data/$SOLR_CORE/conf"
+
+echo "✓ Core recreated"
 
 echo "========================================="
 echo "✓ Solr deployment COMPLETE"
