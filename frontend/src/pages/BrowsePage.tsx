@@ -107,46 +107,46 @@ export default function BrowsePage() {
     return (
         <div className="max-w-5xl mx-auto">
             <Helmet>
-                <title>Movie Locations - Browse</title>
+                <title>Scene Scout - Browse</title>
                 <meta name="description" content="Browse movie filming locations" />
             </Helmet>
 
             <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
                 <Link
                     to="/"
-                    className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group self-start sm:self-auto"
+                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group self-start sm:self-auto"
                 >
-                    <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 group-hover:-translate-x-1 transition-all">
+                    <div className="p-2 rounded-full bg-secondary/10 group-hover:bg-secondary/20 group-hover:-translate-x-1 transition-all">
                         <ArrowLeft className="w-4 h-4" />
                     </div>
                     <span className="font-medium">Back to Search</span>
                 </Link>
 
-                <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md p-2 rounded-xl border border-white/5">
+                <div className="flex items-center gap-4 bg-card/60 backdrop-blur-md p-2 rounded-xl border border-border/40">
                     <div className="flex items-center gap-2 px-2">
-                        <span className="text-sm text-zinc-500">Per page:</span>
+                        <span className="text-sm text-muted-foreground">Per page:</span>
                         <select
                             value={String(limit)}
                             onChange={(e) => onLimitChange(parseInt(e.target.value, 10) || limit)}
-                            className="bg-transparent text-sm text-white focus:outline-none cursor-pointer"
+                            className="bg-transparent text-sm text-foreground focus:outline-none cursor-pointer"
                         >
                             {[10, 20, 50, 100].map((n) => (
-                                <option key={n} value={String(n)} className="bg-zinc-900">
+                                <option key={n} value={String(n)} className="bg-popover text-popover-foreground">
                                     {n}
                                 </option>
                             ))}
                         </select>
                     </div>
 
-                    <div className="w-px h-6 bg-white/10" />
+                    <div className="w-px h-6 bg-border/40" />
 
                     <button
                         onClick={toggleShuffle}
                         className={`
                             flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
                             ${shuffleMode
-                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
-                                : 'hover:bg-white/5 text-zinc-400 hover:text-white'
+                                ? 'bg-primary/20 text-primary border border-primary/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                                : 'hover:bg-accent text-muted-foreground hover:text-foreground'
                             }
                         `}
                     >
@@ -158,14 +158,14 @@ export default function BrowsePage() {
 
             <div className="space-y-4 min-h-[50vh]">
                 {loading && (
-                    <div className="flex flex-col items-center justify-center py-20 text-zinc-500 animate-pulse">
-                        <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4" />
+                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground animate-pulse">
+                        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
                         Loading locations...
                     </div>
                 )}
 
                 {!loading && items.length === 0 && (
-                    <div className="text-center py-20 text-zinc-500 border border-dashed border-white/10 rounded-xl">
+                    <div className="text-center py-20 text-muted-foreground border border-dashed border-border/40 rounded-xl">
                         No items found.
                     </div>
                 )}
@@ -184,9 +184,9 @@ export default function BrowsePage() {
             </div>
 
             {/* Pagination */}
-            <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-6">
-                <div className="text-sm text-zinc-500">
-                    Showing <span className="text-white">{Math.min(total, offset + 1)}</span> - <span className="text-white">{Math.min(total, offset + limit)}</span> of <span className="text-white">{total}</span>
+            <div className="mt-8 flex items-center justify-between border-t border-border/40 pt-6">
+                <div className="text-sm text-muted-foreground">
+                    Showing <span className="text-foreground">{Math.min(total, offset + 1)}</span> - <span className="text-foreground">{Math.min(total, offset + limit)}</span> of <span className="text-foreground">{total}</span>
                 </div>
 
                 <div className="flex gap-2">
@@ -197,7 +197,7 @@ export default function BrowsePage() {
                             loadPage(n);
                         }}
                         disabled={offset === 0 || loading}
-                        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-secondary/10 border border-secondary/20 text-sm font-medium hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-secondary-foreground"
                     >
                         <ChevronLeft className="w-4 h-4" />
                         Previous
@@ -211,7 +211,7 @@ export default function BrowsePage() {
                             }
                         }}
                         disabled={offset + limit >= total || loading}
-                        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-secondary/10 border border-secondary/20 text-sm font-medium hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-secondary-foreground"
                     >
                         Next
                         <ChevronRight className="w-4 h-4" />

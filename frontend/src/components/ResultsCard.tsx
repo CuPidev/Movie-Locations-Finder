@@ -14,6 +14,10 @@ function escapeRegex(s: string) {
     return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// ... (imports remain)
+
+// ... (helper functions remain) highlightText needs update for colors
+
 function highlightText(text: string, query?: string) {
     if (!text) return "";
     const escaped = escapeHtml(text);
@@ -25,8 +29,8 @@ function highlightText(text: string, query?: string) {
         .map(escapeRegex);
     if (tokens.length === 0) return escaped;
     const re = new RegExp("(" + tokens.join("|") + ")", "ig");
-    // Use Tailwind classes for highlight: bg-cyan-900/50 text-cyan-300
-    return escaped.replace(re, '<span class="bg-cyan-500/20 text-cyan-300 px-0.5 rounded font-medium border border-cyan-500/20">$1</span>');
+    // Use semantic colors for highlight
+    return escaped.replace(re, '<span class="bg-primary/20 text-primary px-0.5 rounded font-medium border border-primary/20">$1</span>');
 }
 
 interface ResultsCardProps {
@@ -67,8 +71,8 @@ export default function ResultsCard({
     };
 
     return (
-        <div className="group relative bg-black/40 backdrop-blur-md border border-white/10 hover:border-cyan-500/30 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:-translate-y-1">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        <div className="group relative bg-card/60 backdrop-blur-md border border-border/40 hover:border-primary/30 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
             <div className="p-4 sm:p-5 flex gap-4 sm:gap-6 relative z-10">
                 {/* Poster */}
@@ -77,14 +81,13 @@ export default function ResultsCard({
                         <img
                             src={item.image}
                             alt={`${item.title} poster`}
-                            className="w-20 h-28 sm:w-24 sm:h-36 object-cover rounded-lg shadow-lg border border-white/10 group-hover:border-white/20 transition-colors"
+                            className="w-20 h-28 sm:w-24 sm:h-36 object-cover rounded-lg shadow-lg border border-border/20 group-hover:border-primary/20 transition-colors"
                             onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = "none";
-                                // Fallback logic would require state or parent handling, simpler to just hide or show placeholder
                             }}
                         />
                     ) : (
-                        <div className="w-20 h-28 sm:w-24 sm:h-36 bg-zinc-900 rounded-lg border border-white/10 flex flex-col items-center justify-center text-zinc-600">
+                        <div className="w-20 h-28 sm:w-24 sm:h-36 bg-muted/20 rounded-lg border border-border/20 flex flex-col items-center justify-center text-muted-foreground">
                             <Film className="w-8 h-8 mb-1 opacity-50" />
                             <span className="text-[10px] uppercase tracking-wider">No Image</span>
                         </div>
@@ -99,20 +102,20 @@ export default function ResultsCard({
                                 href={item.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group/link inline-flex items-center gap-2 hover:text-cyan-400 transition-colors"
+                                className="group/link inline-flex items-center gap-2 hover:text-primary transition-colors"
                             >
                                 <h3
-                                    className="text-lg sm:text-xl font-bold leading-tight text-white truncate"
+                                    className="text-lg sm:text-xl font-bold leading-tight text-foreground truncate"
                                     dangerouslySetInnerHTML={{
                                         __html: highlightText(item.title || "(no title)", query),
                                     }}
                                 />
-                                <ExternalLink className="w-4 h-4 opacity-0 group-hover/link:opacity-100 transition-opacity -ml-1 text-cyan-500" />
+                                <ExternalLink className="w-4 h-4 opacity-0 group-hover/link:opacity-100 transition-opacity -ml-1 text-primary" />
                             </a>
 
-                            <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
+                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                                 {item.country && (
-                                    <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-zinc-300">
+                                    <span className="px-2 py-0.5 rounded bg-muted/40 border border-border/20 text-foreground">
                                         {item.country}
                                     </span>
                                 )}
@@ -125,7 +128,7 @@ export default function ResultsCard({
                         {onFindSimilar && item.id && (
                             <button
                                 onClick={handleFindSimilar}
-                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-xs font-medium text-zinc-300 hover:text-cyan-400 transition-all shrink-0"
+                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 border border-secondary/20 hover:border-secondary/40 text-xs font-medium text-secondary transition-all shrink-0"
                                 title="Find similar locations"
                             >
                                 <Search className="w-3.5 h-3.5" />
@@ -140,7 +143,7 @@ export default function ResultsCard({
                             href={`https://www.google.com/maps?q=${item.latitude},${item.longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-500 hover:text-cyan-400 mb-3 hover:underline decorations-cyan-500/30 underline-offset-4 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-xs font-mono text-primary hover:text-primary/80 mb-3 hover:underline decorations-primary/30 underline-offset-4 transition-colors"
                         >
                             <MapPin className="w-3.5 h-3.5" />
                             {Number(item.latitude).toFixed(4)}, {Number(item.longitude).toFixed(4)}
@@ -149,13 +152,13 @@ export default function ResultsCard({
 
                     {/* Location Description */}
                     {item.location_description ? (
-                        <div className="mb-3 text-sm text-zinc-300">
-                            <span className="font-semibold text-zinc-100">Location: </span>
+                        <div className="mb-3 text-sm text-foreground/80">
+                            <span className="font-semibold text-foreground">Location: </span>
                             <span dangerouslySetInnerHTML={{ __html: highlightText(item.location_description, query) }} />
                         </div>
                     ) : (
                         (!item.location_address && !item.location_name) && (
-                            <div className="mb-3 text-sm text-zinc-400 leading-relaxed">
+                            <div className="mb-3 text-sm text-muted-foreground leading-relaxed">
                                 <span dangerouslySetInnerHTML={{ __html: displayedHtml }} />
                             </div>
                         )
@@ -165,7 +168,7 @@ export default function ResultsCard({
                     {clusters && clusters.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-3">
                             {clusters.map((label) => (
-                                <span key={label} className="px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                                <span key={label} className="px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold rounded bg-accent/40 text-accent-foreground border border-accent/20">
                                     {label}
                                 </span>
                             ))}
@@ -174,13 +177,13 @@ export default function ResultsCard({
 
                     {/* Mobile Actions / Toggle */}
                     <div className="flex items-center justify-between mt-2">
-                        <span className="text-[10px] text-zinc-600 font-mono">ID: {item.id}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">ID: {item.id}</span>
 
                         <div className="flex gap-2">
                             {onFindSimilar && item.id && (
                                 <button
                                     onClick={handleFindSimilar}
-                                    className="sm:hidden flex items-center justify-center p-2 rounded-lg bg-white/5 text-zinc-300"
+                                    className="sm:hidden flex items-center justify-center p-2 rounded-lg bg-secondary/10 text-secondary-foreground"
                                 >
                                     <Search className="w-4 h-4" />
                                 </button>
@@ -189,7 +192,7 @@ export default function ResultsCard({
                             {shouldHaveToggle && (
                                 <button
                                     onClick={() => setExpanded(!expanded)}
-                                    className="flex items-center gap-1 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+                                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     {expanded ? (
                                         <>Show Less <ChevronUp className="w-3 h-3" /></>

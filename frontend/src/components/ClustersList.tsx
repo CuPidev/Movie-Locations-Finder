@@ -14,7 +14,7 @@ export default function ClustersList({ clusters, selectedCluster, onSelectCluste
 
     return (
         <div className="mb-6 animate-fade-in">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                 Filter by Topic:
             </p>
             <div className="flex flex-wrap gap-2">
@@ -24,12 +24,13 @@ export default function ClustersList({ clusters, selectedCluster, onSelectCluste
                     return (
                         <button
                             key={idx}
-                            onClick={() => onSelectCluster(label)}
+                            onClick={() => onSelectCluster && onSelectCluster(label)}
+                            disabled={!onSelectCluster}
                             className={`
-                                px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 border
+                                px-3 py-1.5 rounded-full text-xs font-medium border transition-all
                                 ${isSelected
-                                    ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
-                                    : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10 hover:text-zinc-200 hover:border-white/20'
+                                    ? "bg-primary text-primary-foreground border-primary shadow-[0_0_10px_rgba(6,182,212,0.4)]"
+                                    : "bg-card/40 border-border/60 text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-card/80"
                                 }
                             `}
                         >
