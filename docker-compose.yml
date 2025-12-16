@@ -9,7 +9,7 @@ services:
         volumes:
             - solr_data:/var/solr
 
-        command: ["solr-precreate", "movies"]
+        command: ["solr-precreate", "movies", "movies"]
 
 volumes:
     solr_data:

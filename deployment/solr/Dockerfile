@@ -11,5 +11,5 @@ RUN chown -R solr:solr /opt/solr/server/solr/configsets/movies
 # Restore non-root user
 USER solr
 
-# Precreate the core using the baked configset
-CMD ["solr-precreate", "movies", "/opt/solr/server/solr/configsets/movies"]
+# Precreate the core using the baked configset name
+CMD ["solr-precreate", "movies", "movies"]
