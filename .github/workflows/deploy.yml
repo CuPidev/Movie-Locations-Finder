@@ -138,11 +138,16 @@ jobs:
                       echo "Docker already installed"
                     fi
 
-                    # Install docker compose plugin if missing
+                    # Install docker compose plugin if missing (use Docker's repo to ensure package is available)
                     if ! docker compose version >/dev/null 2>&1; then
-                      echo "Installing docker compose plugin..."
+                      echo "Installing docker compose plugin via Docker APT repo..."
                       sudo apt-get update
-                      sudo apt-get install -y docker-compose-plugin
+                      sudo apt-get install -y ca-certificates curl gnupg lsb-release
+                      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+                      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+                      sudo apt-get update
+                      # Install non-interactively to avoid debconf TTY errors
+                      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker-compose-plugin
                     else
                       echo "docker compose plugin available"
                     fi
