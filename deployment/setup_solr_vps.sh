@@ -4,6 +4,8 @@ set -euo pipefail
 # Solr VPS Setup Script
 # Solr 9.x + clustering (module-based)
 # Uses ONLY variables defined here
+# Root of the repo (used for configsets)
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 SOLR_VERSION="9.10.0"
 SOLR_DIR="/opt/solr"
