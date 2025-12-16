@@ -186,8 +186,14 @@ jobs:
                       sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH"
                       cd "$DEPLOY_PATH"
 
-                      # Ensure no container is using port 8983 (Solr)
-                      echo "Checking for containers using port 8983..."
+
+                      # Ensure nothing (container or native) is using port 8983 (Solr)
+                      echo "Checking for processes using port 8983..."
+                      if sudo lsof -i :8983 | grep LISTEN; then
+                        echo "Killing processes using port 8983..."
+                        sudo fuser -k 8983/tcp || true
+                      fi
+                      # Also ensure no container is using port 8983
                       CONTAINERS_ON_8983=$(sudo docker ps --filter "publish=8983" --format '{{.ID}}')
                       if [ -n "$CONTAINERS_ON_8983" ]; then
                         echo "Stopping and removing containers using port 8983: $CONTAINERS_ON_8983"
@@ -218,13 +224,13 @@ jobs:
                       # Start freshly; force rebuild and recreate to ensure config from repo is used.
                       sudo docker compose up -d --force-recreate --build
 
-                      # Wait for Solr HTTP to be available (up to 60 seconds)
-                      for j in {1..60}; do
+                      # Wait for Solr HTTP to be available (up to 180 seconds)
+                      for j in {1..180}; do
                         if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS" > /dev/null 2>&1; then
                           echo "Solr HTTP endpoint is reachable"
                           break
                         fi
-                        if [ $j -eq 60 ]; then
+                        if [ $j -eq 180 ]; then
                           echo "ERROR: Solr from docker compose is not responding after 60 seconds"
                           exit 1
                         fi
