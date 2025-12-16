@@ -76,6 +76,7 @@ sudo chown -R "$SOLR_USER:$SOLR_USER" /var/solr
 sudo chown -R "$SOLR_USER:$SOLR_USER" "$SOLR_DIR"
 echo "✓ Directories configured"
 
+
 # 4b. Copy solrconfig.xml from repo root to Solr configset directory
 echo "[4b/8] Copying solrconfig.xml from repo root to Solr configset..."
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -87,6 +88,32 @@ if [ -f "$REPO_ROOT/solrconfig.xml" ]; then
     echo "✓ solrconfig.xml copied to $SOLR_CONFIGSET_DIR"
 else
     echo "⚠ Warning: solrconfig.xml not found in repo root ($REPO_ROOT)"
+fi
+
+# 4c. Install Solr Clustering (Carrot2) plugin
+echo "[4c/8] Installing Solr Clustering (Carrot2) plugin..."
+PLUGIN_SRC_DIR="/tmp/solr-$SOLR_VERSION/contrib/clustering"
+PLUGIN_LIB_DIR="$SOLR_DIR/server/solr-webapp/webapp/WEB-INF/lib"
+
+# Download and extract Solr again if not present in /tmp for plugin JARs
+if [ ! -d "/tmp/solr-$SOLR_VERSION" ]; then
+    cd /tmp
+    if [ ! -f "solr-$SOLR_VERSION.tgz" ]; then
+        wget -q --show-progress "$SOLR_URL" || {
+            echo "ERROR: Failed to download Solr for plugin extraction."
+            exit 1
+        }
+    fi
+    tar xzf "solr-$SOLR_VERSION.tgz"
+fi
+
+if [ -d "$PLUGIN_SRC_DIR/lib" ]; then
+    sudo cp $PLUGIN_SRC_DIR/lib/*.jar "$PLUGIN_LIB_DIR/"
+    sudo cp $PLUGIN_SRC_DIR/solr-clustering-*.jar "$PLUGIN_LIB_DIR/"
+    sudo chown "$SOLR_USER:$SOLR_USER" "$PLUGIN_LIB_DIR"/*.jar
+    echo "✓ Clustering plugin JARs copied to $PLUGIN_LIB_DIR"
+else
+    echo "⚠ Warning: Clustering plugin directory not found in Solr distribution. Plugin not installed."
 fi
 
 # 5. Configure Solr environment
