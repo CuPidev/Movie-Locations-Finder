@@ -66,23 +66,6 @@ sudo chown -R "$SOLR_USER:$SOLR_USER" /var/solr
 sudo chown -R "$SOLR_USER:$SOLR_USER" "$SOLR_DIR"
 echo "✓ Directories ready"
 
-# 4b. Copy solrconfig.xml INTO CORE
-echo "[4b/8] Installing solrconfig.xml into core..."
-
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CORE_CONF_DIR="/var/solr/data/$SOLR_CORE/conf"
-
-sudo mkdir -p "$CORE_CONF_DIR"
-
-if [ -f "$REPO_ROOT/solrconfig.xml" ]; then
-  sudo cp "$REPO_ROOT/solrconfig.xml" "$CORE_CONF_DIR/solrconfig.xml"
-  sudo chown -R "$SOLR_USER:$SOLR_USER" "$CORE_CONF_DIR"
-  echo "✓ solrconfig.xml installed into core"
-else
-  echo "ERROR: solrconfig.xml not found in $REPO_ROOT"
-  exit 1
-fi
-
 # 5. Solr environment (ENABLE CLUSTERING MODULE)
 echo "[5/8] Configuring Solr environment..."
 
@@ -142,7 +125,7 @@ for i in {1..30}; do
 done
 
 
-# 8. Recreate Solr core with managed schema
+# 8. Recreate Solr core '$SOLR_CORE'
 echo "[8/8] Recreating Solr core '$SOLR_CORE'..."
 
 # Delete core if it exists
@@ -153,19 +136,20 @@ if curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=STATUS&core=$SOL
   sleep 2
 fi
 
-# Create core using Solr default configset (provides managed-schema)
+# Create core from _default configset (creates schema + conf)
 sudo -u "$SOLR_USER" "$SOLR_DIR/bin/solr" create \
   -c "$SOLR_CORE" \
   -n "_default"
 
-# Overwrite solrconfig.xml AFTER core creation
+# OVERWRITE solrconfig.xml AFTER core creation
 sudo cp "$REPO_ROOT/solrconfig.xml" "/var/solr/data/$SOLR_CORE/conf/solrconfig.xml"
 sudo chown -R "$SOLR_USER:$SOLR_USER" "/var/solr/data/$SOLR_CORE"
 
-# Reload core so new solrconfig.xml is picked up
+# Reload core to apply config
 curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=RELOAD&core=$SOLR_CORE" >/dev/null
 
-echo "✓ Core recreated with managed schema"
+echo "✓ Core recreated cleanly"
+
 
 
 echo "========================================="
