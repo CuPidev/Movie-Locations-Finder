@@ -1,0 +1,131 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codeback}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    backgroundcolor=\color{codeback},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{blue},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    numberstyle=\tiny\color{codegray},
+    frame=single
+}
+
+\title{\textbf{Movie Locations Finder Search Engine (MLFSE)} \\ \large Detailed Design, Implementation, and Evaluation Report}
+\author{Development Team}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report details the technical architecture and evaluation strategy for the Movie Locations Finder Search Engine (MLFSE). The system utilizes a decoupled Flask/React architecture backed by Apache Solr to provide geospatial search capabilities for movie filming locations. We describe the custom crawling pipeline, the atomic indexing strategy (indexing locations rather than movies), and the specific API endpoints designed to support faceted and spatial queries.
+\end{abstract}
+
+\section{Executive Summary}
+"Set-jetting" or movie-induced tourism is a growing phenomenon where travelers visit locations featured in films and television. MLFSE addresses the need for a specialized tool that connects cinematic data with geospatial reality. While generic search engines index web pages, MLFSE indexes physical coordinates associated with movie scenes. This report explains how we built a system robust enough to handle spatial queries (e.g., "movies filmed near me") and flexible enough for text-based exploration, all wrapped in a modern, responsive user interface.
+
+\section{Design \& Implementation Strategy}
+
+\subsection{System Architecture}
+The system follows a microservices-inspired decoupled architecture:
+
+\begin{enumerate}
+    \item \textbf{Data Layer (Solr 9.x)}: The core search engine running in a Docker container. It manages the \texttt{movies} core, configured with spatial field types (\texttt{location\_pt}) for geospatial filtering.
+    \item \textbf{Backend API (Flask)}: Use Python 3.10+. Acts as the middleware. It translates RESTful HTTP requests into Solr parameters (using \texttt{pysolr}) and handles business logic like robust error handling (returning mock data if Solr is unreachable).
+    \item \textbf{Frontend (React + Vite)}: A robust Single Page Application (SPA) consuming the Flask API. It uses modern tooling including \texttt{chakra-ui} and \texttt{tailwindcss} for rapid UI development. Key components include:
+    \begin{itemize}
+        \item \texttt{ResultsCard}: Displays movie title, location, and an interactive Google Maps link.
+        \item \texttt{ClustersList}: Shows topic clusters for faceted navigation.
+        \item \texttt{SimilarDocumentsModal}: A modal for finding related movies ("More Like This").
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Data Acquisition \& Processing}
+Data is not static; it is actively harvested using a custom pipeline located in the \texttt{crawler/} directory.
+
+\subsubsection{Crawling Strategy}
+The crawler (\texttt{movielocations\_crawler.py}) implements a two-stage process:
+\begin{itemize}
+    \item \textbf{Category Traversal}: Iterates through A-Z listings on \textit{movie-locations.com}.
+    \item \textbf{Page Parsing}: Uses \texttt{BeautifulSoup4} to extract movie metadata and, crucially, specific location names tagged in HTML.
+    \item \textbf{Geocoding}: We integrated \texttt{geopy} with the Nominatim provider. To respect API usage policies, requests are rate-limited (1s delay) and cached locally to prevent redundant calls.
+\end{itemize}
+
+\subsubsection{Indexing Strategy (Atomic Locations)}
+A key design choice was the \textbf{Atomic Location Indexing} strategy found in \texttt{index\_data.py}. Instead of indexing one document per movie with a list of locations, we index \textbf{one document per location}. 
+\begin{itemize}
+    \item \textbf{Rationale}: This allows Solr to return precise spatial matches. If a movie was filmed in London and Tokyo, a user searching "near Tokyo" should only see the Tokyo result, not the London one.
+    \item \textbf{Schema}:
+    \begin{itemize}
+        \item \texttt{id}: Unique composite key (e.g., \texttt{movie\_url\_\_loc\_3}).
+        \item \texttt{movie\_title}: Title of the film.
+        \item \texttt{location\_name}: Specific name of the place (e.g., "Griffith Observatory").
+        \item \texttt{location\_pt}: Lat/Lon pair for spatial queries.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Backend API Implementation}
+The Flask application (\texttt{src/api.py}) exposes several specialized endpoints:
+
+\begin{itemize}
+    \item \texttt{GET /api/search?q=...}: Standard keywords search. Uses Solr's clustering component to group result topics.
+    \item \texttt{GET /api/locations/nearby?lat=...\&lon=...\&radius=...}: Performs a geospatial filter query (\texttt{!geofilt}) to find filming locations within a generic radius from the user.
+    \item \texttt{GET /api/locations/grouped}: Uses Solr's Result Grouping (\texttt{group=true\&group.field=location\_name}) to show popular filming locations (e.g., aggregating all movies filmed at "Central Park").
+\end{itemize}
+
+\section{Evaluation Framework}
+We propose a mixed-method evaluation based on \textbf{real user interactions} with the frontend interface.
+
+\subsection{Benchmark Tasks}
+Participants will be asked to complete the following tasks using the web application's GUI:
+
+\begin{description}
+    \item[Task A: Spatial Precision (Known-Item)] \hfill \\
+    \textit{"Use the 'Nearby' feature: Input the coordinates for Griffith Observatory (34.118, -118.300). Verify if the first result shown in the list is related to the movie \textbf{Rebel Without a Cause}. Click the Google Maps link to confirm the location."} 
+    \\ \textbf{Goal}: Tests the Geocoding accuracy and the \texttt{ResultsCard} map integration.
+    
+    \item[Task B: Faceted Exploration (Exploratory)] \hfill \\
+    \textit{"Type 'United Kingdom' in the search bar. Look at the \textbf{Clusters} sidebar on the left. Click on the 'Horror' cluster (if available) or manually filter results to find 3 horror movies filmed in the UK."}
+    \\ \textbf{Goal}: Tests the \texttt{ClustersList} component and faceted search UX.
+    
+    \item[Task C: Discovery (Complex)] \hfill \\
+    \textit{"Search for 'Inception'. Click on the \textbf{'More Like This'} button on the first result card. In the modal window that opens, identify a movie that was also filmed in Paris."}
+    \\ \textbf{Goal}: Tests the \texttt{SimilarDocumentsModal} and the relevance of the recommendation engine.
+\end{description}
+
+\subsection{Evaluation Metrics}
+\begin{enumerate}
+    \item \textbf{Quantitative}:
+    \begin{itemize}
+        \item \textbf{Task Success Rate}: Did the user find the correct information?
+        \item \textbf{Click Depth}: How many clicks were required to reach the target?
+        \item \textbf{Latency}: Time between clicking 'Search' and rendering results (Target: $<200$ms).
+    \end{itemize}
+    \item \textbf{Qualitative}:
+    \item \textbf{SUS (System Usability Scale)}: 10-item questionnaire to assess perceived ease of use.
+\end{enumerate}
+
+\section{Conclusion}
+MLFSE demonstrates the effective application of modern Information Retrieval techniques to a niche domain. By splitting movie entities into atomic location documents and leveraging Solr's geospatial capabilities, we provide a search experience that is significantly more relevant for travelers than standard web search. The decoupled architecture ensures that the system can scale, supporting future features like user-generated location submissions or mobile app integration.
+
+\end{document}
