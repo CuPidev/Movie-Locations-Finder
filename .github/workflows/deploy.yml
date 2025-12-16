@@ -93,6 +93,9 @@ jobs:
                     sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 /tmp/repo_deploy.tar.gz "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/repo_deploy.tar.gz"
                   fi
 
+            - name: Install docker-compose (for build step)
+              run: sudo apt-get update && sudo apt-get install -y docker-compose
+
             - name: Build Solr Docker image
               run: |
                   docker-compose build
