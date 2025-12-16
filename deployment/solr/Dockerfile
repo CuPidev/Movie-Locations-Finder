@@ -1,8 +1,10 @@
 FROM solr:9.10.0
 
+USER root
 # Install Maven for plugin build
 RUN apt-get update && apt-get install -y maven wget && rm -rf /var/lib/apt/lists/*
 
+USER solr
 # Download and build clustering plugin from Solr source
 RUN wget https://archive.apache.org/dist/solr/solr/9.10.0/solr-9.10.0-src.tgz -O /tmp/solr-9.10.0-src.tgz \
  && tar xzf /tmp/solr-9.10.0-src.tgz -C /tmp \
