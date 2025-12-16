@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import BrowsePage from "./pages/BrowsePage";
 import SearchPage from "./pages/SearchPage";
 import { Home } from "lucide-react";
+import GridBackground from "./components/GridBackground";
 
 // Simple Glass Header
 function Header() {
@@ -50,7 +51,8 @@ export default function App() {
     return (
         <HelmetProvider>
             <BrowserRouter>
-                <div className="flex flex-col min-h-screen font-sans text-white">
+                <div className="flex flex-col min-h-screen font-sans text-white relative bg-zinc-950">
+                    <GridBackground />
                     <Header />
                     <main className="flex-1 container mx-auto px-4 py-8 animate-fade-in relative z-10">
                         <Routes>

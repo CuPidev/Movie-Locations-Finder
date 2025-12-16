@@ -55,6 +55,15 @@ module.exports = {
 					'5': 'hsl(var(--chart-5))'
 				}
 			}
+		},
+		animation: {
+			'grid-flow': 'grid-flow 20s linear infinite',
+		},
+		keyframes: {
+			'grid-flow': {
+				'0%': { transform: 'translateY(0)' },
+				'100%': { transform: 'translateY(4rem)' },
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
