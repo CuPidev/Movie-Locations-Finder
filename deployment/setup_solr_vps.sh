@@ -124,16 +124,27 @@ if [ "$PLUGIN_INSTALLED" -eq 0 ]; then
         if [ ! -f "solr-$SOLR_VERSION-src.tgz" ]; then
             wget -q --show-progress "$SRC_URL" || {
                 echo "WARNING: Failed to download Solr source. Skipping clustering plugin build."
+                exit 1
             }
         fi
-        tar xzf "solr-$SOLR_VERSION-src.tgz"
+        echo "Extracting Solr source..."
+        tar xzf "solr-$SOLR_VERSION-src.tgz" || { echo "ERROR: Failed to extract Solr source tarball."; exit 1; }
     fi
     # Install Maven if not present
     if ! command -v mvn &> /dev/null; then
         echo "Installing Maven..."
         sudo apt-get update && sudo apt-get install -y maven
     fi
-    cd "/tmp/solr-$SOLR_VERSION-src/solr/contrib/clustering"
+    # Find the clustering plugin directory dynamically
+    CLUSTERING_DIR=$(find /tmp/solr-$SOLR_VERSION-src -type d -name clustering | head -n 1)
+    if [ -z "$CLUSTERING_DIR" ]; then
+        echo "ERROR: Could not find clustering plugin directory in Solr source. Directory tree under /tmp/solr-$SOLR_VERSION-src:"
+        find /tmp/solr-$SOLR_VERSION-src -type d | grep clustering || true
+        exit 1
+    else
+        echo "✓ Found clustering plugin directory: $CLUSTERING_DIR"
+    fi
+    cd "$CLUSTERING_DIR"
     mvn package -DskipTests
     # Copy built JARs
     if ls target/*.jar 1> /dev/null 2>&1; then
