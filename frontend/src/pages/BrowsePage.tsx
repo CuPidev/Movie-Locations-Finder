@@ -197,7 +197,7 @@ export default function BrowsePage() {
                             loadPage(n);
                         }}
                         disabled={offset === 0 || loading}
-                        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-secondary/10 border border-secondary/20 text-sm font-medium hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-secondary-foreground"
+                        className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-all border disabled:opacity-100 disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted-foreground disabled:border-border/50 enabled:bg-secondary/10 enabled:border-secondary/20 enabled:hover:border-secondary/40 enabled:text-secondary enabled:hover:bg-secondary/20"
                     >
                         <ChevronLeft className="w-4 h-4" />
                         Previous
@@ -211,7 +211,7 @@ export default function BrowsePage() {
                             }
                         }}
                         disabled={offset + limit >= total || loading}
-                        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-secondary/10 border border-secondary/20 text-sm font-medium hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-secondary-foreground"
+                        className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-all border disabled:opacity-100 disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted-foreground disabled:border-border/50 enabled:bg-secondary/10 enabled:border-secondary/20 enabled:hover:border-secondary/40 enabled:text-secondary enabled:hover:bg-secondary/20"
                     >
                         Next
                         <ChevronRight className="w-4 h-4" />

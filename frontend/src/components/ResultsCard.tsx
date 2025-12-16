@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { MapPin, ExternalLink, Film, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { MapPin, ExternalLink, Film, Search, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
 function escapeHtml(s: string) {
     return String(s)
@@ -14,10 +14,6 @@ function escapeRegex(s: string) {
     return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// ... (imports remain)
-
-// ... (helper functions remain) highlightText needs update for colors
-
 function highlightText(text: string, query?: string) {
     if (!text) return "";
     const escaped = escapeHtml(text);
@@ -30,7 +26,7 @@ function highlightText(text: string, query?: string) {
     if (tokens.length === 0) return escaped;
     const re = new RegExp("(" + tokens.join("|") + ")", "ig");
     // Use semantic colors for highlight
-    return escaped.replace(re, '<span class="bg-primary/15 px-0.5 rounded font-medium">$1</span>');
+    return escaped.replace(re, '<span class="bg-primary/15 px-0.5 rounded">$1</span>');
 }
 
 interface ResultsCardProps {
@@ -49,14 +45,17 @@ export default function ResultsCard({
     onFindSimilar,
 }: ResultsCardProps) {
     const fullText: string = item.content || "";
+    // ... (keep existing consts)
     const shortText: string =
         fullText.length > maxLen
             ? fullText.slice(0, maxLen - 1) + "…"
             : fullText;
 
-    // Always show toggle if text is long enough
     const shouldHaveToggle = fullText.length > maxLen;
     const [expanded, setExpanded] = useState(false);
+    const [imageLoading, setImageLoading] = useState(true);
+
+    // ... (keep memod)
 
     const displayedHtml = useMemo(() => {
         return highlightText(expanded ? fullText : shortText, query);
@@ -76,16 +75,25 @@ export default function ResultsCard({
 
             <div className="p-4 sm:p-5 flex gap-4 sm:gap-6 relative z-10">
                 {/* Poster */}
-                <div className="shrink-0">
+                <div className="shrink-0 relative">
                     {item.image ? (
-                        <img
-                            src={item.image}
-                            alt={`${item.title} poster`}
-                            className="w-20 h-28 sm:w-24 sm:h-36 object-cover rounded-lg shadow-lg border border-border/20 group-hover:border-primary/20 transition-colors"
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none";
-                            }}
-                        />
+                        <>
+                            {imageLoading && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-muted/20 rounded-lg border border-border/20">
+                                    <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                                </div>
+                            )}
+                            <img
+                                src={item.image}
+                                alt={`${item.title} poster`}
+                                className={`w-20 h-28 sm:w-24 sm:h-36 object-cover rounded-lg shadow-lg border border-border/20 group-hover:border-primary/20 transition-colors ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                                onLoad={() => setImageLoading(false)}
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = "none";
+                                    setImageLoading(false);
+                                }}
+                            />
+                        </>
                     ) : (
                         <div className="w-20 h-28 sm:w-24 sm:h-36 bg-muted/20 rounded-lg border border-border/20 flex flex-col items-center justify-center text-muted-foreground">
                             <Film className="w-8 h-8 mb-1 opacity-50" />
