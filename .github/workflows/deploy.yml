@@ -163,12 +163,19 @@ jobs:
 
                     # Use docker compose to bring up services defined in the repo
                     if [ -f "$DEPLOY_PATH/docker-compose.yml" ]; then
-                      echo "Starting services with docker compose..."
                       sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH"
-
                       cd "$DEPLOY_PATH"
+
+                      # Recreate services from the ground up on every deploy.
+                      # This will stop and remove existing containers and start fresh.
+                      echo "Recreating services from scratch (docker compose down + up)"
+                      cd "$DEPLOY_PATH"
+                      # Pull latest images but don't fail the deploy if pull has issues
                       sudo docker compose pull || true
-                      sudo docker compose up -d
+                      # Stop and remove containers and named volumes so the fresh container will read repo-mounted config.
+                      sudo docker compose down -v --remove-orphans || true
+                      # Start freshly; force rebuild and recreate to ensure config from repo is used.
+                      sudo docker compose up -d --force-recreate --build
 
                       # Wait for Solr to be ready (up to 60 seconds)
                       for j in {1..60}; do
@@ -183,15 +190,26 @@ jobs:
                         sleep 1
                       done
 
+                      # Determine the running Solr container to target for single-file updates.
+                      SOLR_CONTAINER=""
+                      if sudo docker ps --filter "name=heritage-solr-1" --format '{{.Names}}' | grep -q .; then
+                        SOLR_CONTAINER="heritage-solr-1"
+                      else
+                        SOLR_CONTAINER=$(sudo docker ps --filter "ancestor=solr:latest" --format '{{.Names}}' | head -n1 || true)
+                      fi
+
                       # If a repo solrconfig.xml exists at the repo root, copy only that file
                       # into the running Solr container so we don't replace the full conf dir.
-                      if [ -f "$DEPLOY_PATH/solrconfig.xml" ]; then
-                        echo "Applying repo solrconfig.xml into running Solr container"
-                        # Copy the single file into the container's core conf directory
-                        sudo docker cp "$DEPLOY_PATH/solrconfig.xml" heritage-solr-1:/var/solr/data/movies/conf/solrconfig.xml || true
-                        sudo docker exec heritage-solr-1 bash -lc "chown solr:solr /var/solr/data/movies/conf/solrconfig.xml" || true
+                      if [ -n "$SOLR_CONTAINER" ] && [ -f "$DEPLOY_PATH/solrconfig.xml" ]; then
+                        echo "Applying repo solrconfig.xml into running Solr container: $SOLR_CONTAINER"
+                        sudo docker cp "$DEPLOY_PATH/solrconfig.xml" "$SOLR_CONTAINER":/var/solr/data/movies/conf/solrconfig.xml || true
+                        sudo docker exec "$SOLR_CONTAINER" bash -lc "chown solr:solr /var/solr/data/movies/conf/solrconfig.xml" || true
                         # Reload core to pick up changes
                         curl -s "http://localhost:8983/solr/admin/cores?action=RELOAD&core=movies" || true
+                      else
+                        if [ -f "$DEPLOY_PATH/solrconfig.xml" ]; then
+                          echo "Warning: could not find a running Solr container to apply solrconfig.xml"
+                        fi
                       fi
                     fi
 
