@@ -23,7 +23,7 @@ export default function TopicCard({ cluster }: { cluster: Cluster }) {
                 const res = await fetch("/api/cluster-docs", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ids: cluster.doc_ids }),
+                    body: JSON.stringify({ ids: cluster.doc_ids || [] }),
                 });
                 const data = await res.json();
                 setDocs(data.results || []);
@@ -71,11 +71,13 @@ export default function TopicCard({ cluster }: { cluster: Cluster }) {
                     {!loading && docs && docs.length > 0 && (
                         <ul>
                             {docs.map((d) => {
-                                const rawContent = (d && (d.content ?? d.contents)) || "";
+                                const rawContent =
+                                    (d && (d.content ?? d.contents)) || "";
                                 const contentStr =
                                     typeof rawContent === "string"
                                         ? rawContent
-                                        : rawContent && typeof rawContent === "object"
+                                        : rawContent &&
+                                          typeof rawContent === "object"
                                         ? JSON.stringify(rawContent)
                                         : String(rawContent || "");
                                 const snippet = contentStr.substring(0, 200);
@@ -84,16 +86,21 @@ export default function TopicCard({ cluster }: { cluster: Cluster }) {
                                         key={d.id || JSON.stringify(d)}
                                         style={{ marginBottom: 6 }}
                                     >
-                                        <a href={d.id} target="_blank" rel="noreferrer">
+                                        <a
+                                            href={d.id}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                        >
                                             {d.title || d.id}
                                         </a>
                                         {snippet && (
-                                            <div style={{ color: "#444" }}>{snippet}</div>
+                                            <div style={{ color: "#444" }}>
+                                                {snippet}
+                                            </div>
                                         )}
                                     </li>
                                 );
                             })}
-                            }
                         </ul>
                     )}
 
