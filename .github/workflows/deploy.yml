@@ -139,131 +139,16 @@ jobs:
                     sudo -u "${DEPLOY_USER}" tar -xzf /tmp/repo_deploy.tar.gz -C "$DEPLOY_PATH"
                     sudo rm -f /tmp/repo_deploy.tar.gz
 
-                    # Setup Solr (if present) — keep as sudo since it may require root
+
+                    # Setup Solr using setup_solr_vps.sh
                     echo "========================================="
-                    echo "Installing Docker + docker compose and running docker-compose.yml..."
+                    echo "Running setup_solr_vps.sh to install and configure Solr..."
                     echo "========================================="
-
-                    # Install Docker if not already installed
-                    if ! command -v docker >/dev/null 2>&1; then
-                      echo "Installing Docker..."
-                      sudo apt-get update
-                      sudo apt-get install -y docker.io
-                      sudo systemctl enable --now docker
+                    if [ -f "$DEPLOY_PATH/deployment/setup_solr_vps.sh" ]; then
+                      sudo bash "$DEPLOY_PATH/deployment/setup_solr_vps.sh"
                     else
-                      echo "Docker already installed"
-                    fi
-
-                    # Install docker compose plugin if missing (use Docker's repo to ensure package is available)
-                    if ! docker compose version >/dev/null 2>&1; then
-                      echo "Installing docker compose plugin via Docker APT repo..."
-                      sudo apt-get update
-                      sudo apt-get install -y ca-certificates curl gnupg lsb-release
-                      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-                      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-                      sudo apt-get update
-                      # Install non-interactively to avoid debconf TTY errors
-                      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker-compose-plugin
-                    else
-                      echo "docker compose plugin available"
-                    fi
-
-                    # Ensure deployment dir has the compose file (tarball extracted earlier)
-                    if [ -f "$DEPLOY_PATH/docker-compose.yml" ]; then
-                      echo "Found docker-compose.yml in deployment path"
-                    else
-                      echo "docker-compose.yml not found in $DEPLOY_PATH; falling back to running solr container"
-                      # If CI shipped a prebuilt image tar, load it first
-                      if [ -f /tmp/solr_image.tar ]; then
-                        sudo docker load -i /tmp/solr_image.tar || true
-                      fi
-                      sudo docker pull solr:latest
-                      sudo docker run -d --name solr -p 8983:8983 -e SOLR_MODULES=clustering -v /var/solr:/var/solr solr:latest solr-precreate movies
-                    fi
-
-                    # Use docker compose to bring up services defined in the repo
-                    if [ -f "$DEPLOY_PATH/docker-compose.yml" ]; then
-                      sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH"
-                      cd "$DEPLOY_PATH"
-
-
-                      # Ensure nothing (container or native) is using port 8983 (Solr)
-                      echo "Checking for processes using port 8983..."
-                      if sudo lsof -i :8983 | grep LISTEN; then
-                        echo "Killing processes using port 8983..."
-                        sudo fuser -k 8983/tcp || true
-                      fi
-                      # Also ensure no container is using port 8983
-                      CONTAINERS_ON_8983=$(sudo docker ps --filter "publish=8983" --format '{{.ID}}')
-                      if [ -n "$CONTAINERS_ON_8983" ]; then
-                        echo "Stopping and removing containers using port 8983: $CONTAINERS_ON_8983"
-                        for cid in $CONTAINERS_ON_8983; do
-                          sudo docker stop "$cid" || true
-                          sudo docker rm "$cid" || true
-                        done
-                      fi
-
-                      # Recreate services from the ground up on every deploy.
-                      # This will stop and remove existing containers and start fresh.
-                      echo "Recreating services from scratch (docker compose down + up)"
-                      cd "$DEPLOY_PATH"
-                      # If CI shipped a solr image tar, load it so compose will use the exact CI-built image
-                      if [ -f /tmp/solr_image.tar ]; then
-                        echo "Loading CI-built Solr image into Docker"
-                        sudo docker load -i /tmp/solr_image.tar || true
-                      fi
-                      # Only attempt to pull images from registry if the CI-built image isn't present locally
-                      if sudo docker images --format '{{.Repository}}:{{.Tag}}' | grep -q '^movie-locations-solr:latest$'; then
-                        echo "Using locally loaded movie-locations-solr:latest image; skipping docker compose pull for that image"
-                      else
-                        echo "movie-locations-solr not present locally; attempting docker compose pull for images"
-                        sudo docker compose pull || true
-                      fi
-                      # Stop and remove containers and named volumes so the fresh container will read repo-mounted config.
-                      sudo docker compose down -v --remove-orphans || true
-                      # Start freshly; force rebuild and recreate to ensure config from repo is used.
-                      sudo docker compose up -d --force-recreate --build
-
-                      # Wait for Solr HTTP to be available (up to 180 seconds)
-                      for j in {1..180}; do
-                        if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS" > /dev/null 2>&1; then
-                          echo "Solr HTTP endpoint is reachable"
-                          break
-                        fi
-                        if [ $j -eq 180 ]; then
-                          echo "ERROR: Solr from docker compose is not responding after 60 seconds"
-                          exit 1
-                        fi
-                        sleep 1
-                      done
-
-                      # Wait for the 'movies' core to appear (up to 120 seconds)
-                      CORE_OK=0
-                      for k in {1..120}; do
-                        if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS&core=movies" | grep -q '"movies"'; then
-                          CORE_OK=1
-                          echo "Solr core 'movies' is present"
-                          break
-                        fi
-                        if [ $k -eq 120 ]; then
-                          echo "ERROR: Solr core 'movies' did not appear after 120 seconds"
-                          break
-                        fi
-                        sleep 1
-                      done
-
-                      # Determine the running Solr container to target for single-file updates.
-                      SOLR_CONTAINER=""
-                      if sudo docker ps --filter "name=heritage-solr-1" --format '{{.Names}}' | grep -q .; then
-                        SOLR_CONTAINER="heritage-solr-1"
-                      else
-                        SOLR_CONTAINER=$(sudo docker ps --filter "ancestor=solr:latest" --format '{{.Names}}' | head -n1 || true)
-                      fi
-
-                      # CI-built image should contain the repo configset; skip runtime copy/chown.
-                      if [ -f "$DEPLOY_PATH/solrconfig.xml" ]; then
-                        echo "Using CI-built Solr image; skipping runtime solrconfig.xml copy/chown/reload"
-                      fi
+                      echo "ERROR: setup_solr_vps.sh not found in $DEPLOY_PATH/deployment"
+                      exit 1
                     fi
 
                     # Install Python dependencies inside a venv as the deploy user
