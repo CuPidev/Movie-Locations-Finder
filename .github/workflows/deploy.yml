@@ -68,6 +68,7 @@ jobs:
             - name: Create tarball
               run: |
                   # Exclude large/runtime artifacts (Solr release folder, venv, node_modules, data files)
+                  # But always include solrconfig.xml from repo root for VPS deployment
                   tar -czf /tmp/repo_deploy.tar.gz \
                     --exclude='.git' \
                     --exclude='.venv' \
@@ -75,6 +76,7 @@ jobs:
                     --exclude='frontend/node_modules' \
                     --exclude='solr-*' \
                     --exclude='frontend/.turbo' \
+                    --include='solrconfig.xml' \
                     .
                   echo "Created /tmp/repo_deploy.tar.gz (size: $(ls -lh /tmp/repo_deploy.tar.gz | awk '{print $5}'))"
 

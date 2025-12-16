@@ -8,7 +8,8 @@ services:
             - SOLR_OPTS=-Dsolr.clustering.enabled=true
         volumes:
             - solr_data:/var/solr
-
+            # Mount solrconfig.xml from the deployment path into the configset used by the core
+            - ./solrconfig.xml:/opt/solr/server/solr/configsets/movies/conf/solrconfig.xml:ro
         command: ["solr-precreate", "movies", "movies"]
 
 volumes:

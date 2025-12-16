@@ -67,6 +67,7 @@ else
     echo "✓ Solr already installed at $SOLR_DIR"
 fi
 
+
 # 4. Set up Solr directories and permissions
 echo "[4/8] Setting up directories and permissions..."
 sudo mkdir -p /var/solr/data
@@ -74,6 +75,19 @@ sudo mkdir -p /var/solr/logs
 sudo chown -R "$SOLR_USER:$SOLR_USER" /var/solr
 sudo chown -R "$SOLR_USER:$SOLR_USER" "$SOLR_DIR"
 echo "✓ Directories configured"
+
+# 4b. Copy solrconfig.xml from repo root to Solr configset directory
+echo "[4b/8] Copying solrconfig.xml from repo root to Solr configset..."
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SOLR_CONFIGSET_DIR="$SOLR_DIR/server/solr/configsets/movies/conf"
+sudo mkdir -p "$SOLR_CONFIGSET_DIR"
+if [ -f "$REPO_ROOT/solrconfig.xml" ]; then
+    sudo cp "$REPO_ROOT/solrconfig.xml" "$SOLR_CONFIGSET_DIR/solrconfig.xml"
+    sudo chown -R "$SOLR_USER:$SOLR_USER" "$SOLR_CONFIGSET_DIR"
+    echo "✓ solrconfig.xml copied to $SOLR_CONFIGSET_DIR"
+else
+    echo "⚠ Warning: solrconfig.xml not found in repo root ($REPO_ROOT)"
+fi
 
 # 5. Configure Solr environment
 echo "[5/8] Configuring Solr environment..."
