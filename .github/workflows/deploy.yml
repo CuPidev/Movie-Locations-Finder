@@ -186,6 +186,17 @@ jobs:
                       sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH"
                       cd "$DEPLOY_PATH"
 
+                      # Ensure no container is using port 8983 (Solr)
+                      echo "Checking for containers using port 8983..."
+                      CONTAINERS_ON_8983=$(sudo docker ps --filter "publish=8983" --format '{{.ID}}')
+                      if [ -n "$CONTAINERS_ON_8983" ]; then
+                        echo "Stopping and removing containers using port 8983: $CONTAINERS_ON_8983"
+                        for cid in $CONTAINERS_ON_8983; do
+                          sudo docker stop "$cid" || true
+                          sudo docker rm "$cid" || true
+                        done
+                      fi
+
                       # Recreate services from the ground up on every deploy.
                       # This will stop and remove existing containers and start fresh.
                       echo "Recreating services from scratch (docker compose down + up)"
