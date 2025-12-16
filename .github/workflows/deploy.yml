@@ -165,6 +165,21 @@ jobs:
                     if [ -f "$DEPLOY_PATH/docker-compose.yml" ]; then
                       echo "Starting services with docker compose..."
                       sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH"
+
+                      # If solr config files are at repo root, populate deployment/solr_conf
+                      if [ -f "$DEPLOY_PATH/solrconfig.xml" ] || [ -f "$DEPLOY_PATH/managed-schema" ]; then
+                        echo "Found solr config files at repo root — creating deployment/solr_conf"
+                        sudo mkdir -p "$DEPLOY_PATH/deployment/solr_conf"
+                        sudo cp -a "$DEPLOY_PATH/solrconfig.xml" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
+                        sudo cp -a "$DEPLOY_PATH/managed-schema" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
+                        sudo cp -a "$DEPLOY_PATH/synonyms.txt" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
+                        sudo cp -a "$DEPLOY_PATH/stopwords.txt" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
+                        if [ -d "$DEPLOY_PATH/lang" ]; then
+                          sudo cp -a "$DEPLOY_PATH/lang" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
+                        fi
+                        sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH/deployment/solr_conf"
+                      fi
+
                       cd "$DEPLOY_PATH"
                       sudo docker compose pull || true
                       sudo docker compose up -d
