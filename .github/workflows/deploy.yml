@@ -79,14 +79,6 @@ jobs:
                     .
                   echo "Created /tmp/repo_deploy.tar.gz (size: $(ls -lh /tmp/repo_deploy.tar.gz | awk '{print $5}'))"
 
-            - name: Build Solr image and save tar
-              run: |
-                  # Build the custom Solr image using the repo Dockerfile
-                  docker build -t movie-locations-solr:latest -f deployment/solr/Dockerfile . || true
-                  docker save movie-locations-solr:latest -o /tmp/solr_image.tar || true
-              env:
-                  DOCKER_BUILDKIT: 1
-
             - name: Copy tarball to VPS (password auth)
               env:
                   DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -97,15 +89,8 @@ jobs:
                   set -euo pipefail
                   if [ -n "${DEPLOY_PORT}" ]; then
                     sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -P "${DEPLOY_PORT}" /tmp/repo_deploy.tar.gz "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/repo_deploy.tar.gz"
-                    # Also copy docker image tar if it exists
-                    if [ -f /tmp/solr_image.tar ]; then
-                      sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -P "${DEPLOY_PORT}" /tmp/solr_image.tar "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/solr_image.tar" || true
-                    fi
                   else
                     sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 /tmp/repo_deploy.tar.gz "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/repo_deploy.tar.gz"
-                    if [ -f /tmp/solr_image.tar ]; then
-                      sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 /tmp/solr_image.tar "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/solr_image.tar" || true
-                    fi
                   fi
 
             - name: Remote extract, install and restart
