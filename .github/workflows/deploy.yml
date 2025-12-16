@@ -189,12 +189,17 @@ jobs:
                       # This will stop and remove existing containers and start fresh.
                       echo "Recreating services from scratch (docker compose down + up)"
                       cd "$DEPLOY_PATH"
-                      # Pull latest images but don't fail the deploy if pull has issues
-                      sudo docker compose pull || true
                       # If CI shipped a solr image tar, load it so compose will use the exact CI-built image
                       if [ -f /tmp/solr_image.tar ]; then
                         echo "Loading CI-built Solr image into Docker"
                         sudo docker load -i /tmp/solr_image.tar || true
+                      fi
+                      # Only attempt to pull images from registry if the CI-built image isn't present locally
+                      if sudo docker images --format '{{.Repository}}:{{.Tag}}' | grep -q '^movie-locations-solr:latest$'; then
+                        echo "Using locally loaded movie-locations-solr:latest image; skipping docker compose pull for that image"
+                      else
+                        echo "movie-locations-solr not present locally; attempting docker compose pull for images"
+                        sudo docker compose pull || true
                       fi
                       # Stop and remove containers and named volumes so the fresh container will read repo-mounted config.
                       sudo docker compose down -v --remove-orphans || true

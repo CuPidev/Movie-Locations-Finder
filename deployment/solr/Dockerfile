@@ -1,10 +1,15 @@
 FROM solr:latest
 
-# Bake repository solrconfig.xml into a configset and precreate the 'movies' core
+# Switch to root to write into image filesystem, then return to solr user
+USER root
+
+# Create a configset directory and copy the repo solrconfig.xml into it
 RUN mkdir -p /opt/solr/server/solr/configsets/movies/conf
 COPY solrconfig.xml /opt/solr/server/solr/configsets/movies/conf/solrconfig.xml
+RUN chown -R solr:solr /opt/solr/server/solr/configsets/movies
 
-# If you have additional conf files, add them to the repo root or deployment/solr_conf
-# and add COPY lines here.
+# Restore non-root user
+USER solr
 
+# Precreate the core using the baked configset
 CMD ["solr-precreate", "movies", "/opt/solr/server/solr/configsets/movies"]
