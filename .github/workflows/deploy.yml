@@ -242,18 +242,9 @@ jobs:
                         SOLR_CONTAINER=$(sudo docker ps --filter "ancestor=solr:latest" --format '{{.Names}}' | head -n1 || true)
                       fi
 
-                      # If a repo solrconfig.xml exists at the repo root, copy only that file
-                      # into the running Solr container so we don't replace the full conf dir.
-                      if [ -n "$SOLR_CONTAINER" ] && [ -f "$DEPLOY_PATH/solrconfig.xml" ] && [ "$CORE_OK" -eq 1 ]; then
-                        echo "Applying repo solrconfig.xml into running Solr container: $SOLR_CONTAINER"
-                        sudo docker cp "$DEPLOY_PATH/solrconfig.xml" "$SOLR_CONTAINER":/var/solr/data/movies/conf/solrconfig.xml || true
-                        sudo docker exec "$SOLR_CONTAINER" bash -lc "chown solr:solr /var/solr/data/movies/conf/solrconfig.xml" || true
-                        # Reload core to pick up changes
-                        curl -s "http://localhost:8983/solr/admin/cores?action=RELOAD&core=movies" || true
-                      else
-                        if [ -f "$DEPLOY_PATH/solrconfig.xml" ]; then
-                          echo "Warning: could not apply solrconfig.xml because 'movies' core isn't ready or container not found"
-                        fi
+                      # CI-built image should contain the repo configset; skip runtime copy/chown.
+                      if [ -f "$DEPLOY_PATH/solrconfig.xml" ]; then
+                        echo "Using CI-built Solr image; skipping runtime solrconfig.xml copy/chown/reload"
                       fi
                     fi
 
