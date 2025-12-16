@@ -101,6 +101,7 @@ To get updated data, run the crawler using
 ```bash
 python ./crawler/movielocations_crawler.py
 python ./crawler/cinemapper_crawler.py
+python ./crawler/movielocationsca_crawler.py
 ```
 
 after which new data will be available in the `temp` directory. Move the files from `temp` to `data` and run the indexer again.
