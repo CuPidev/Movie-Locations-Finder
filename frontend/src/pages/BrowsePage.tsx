@@ -1,7 +1,7 @@
-import { Box, Button, Select } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { ArrowLeft, Shuffle, ChevronLeft, ChevronRight } from "lucide-react";
 import ResultsCard from "../components/ResultsCard";
 import SimilarDocumentsModal from "../components/SimilarDocumentsModal";
 
@@ -9,8 +9,6 @@ function qs(key: string, fallback?: string) {
     const params = new URLSearchParams(location.search);
     return params.has(key) ? params.get(key) : fallback;
 }
-
-const MIN_SHOW_MORE_CHARS = 220;
 
 export default function BrowsePage() {
     const [offset, setOffset] = useState(
@@ -107,101 +105,104 @@ export default function BrowsePage() {
     }
 
     return (
-        <Box>
+        <div className="max-w-5xl mx-auto">
             <Helmet>
-                <title>Movie Sites Finder - Browse</title>
-                <meta
-                    name="description"
-                    content="Browse Movie sites"
-                />
+                <title>Movie Locations - Browse</title>
+                <meta name="description" content="Browse movie filming locations" />
             </Helmet>
-            <Box mb={3}>
-                <Link to="/">
-                    <Button
-                        bg="var(--accent)"
-                        color="var(--button-text)"
-                        _hover={{ bg: "var(--accent-700)" }}
-                        leftIcon={<span>&larr;</span>}
-                        size="sm"
-                    >
-                        Back
-                    </Button>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+                <Link
+                    to="/"
+                    className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group self-start sm:self-auto"
+                >
+                    <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 group-hover:-translate-x-1 transition-all">
+                        <ArrowLeft className="w-4 h-4" />
+                    </div>
+                    <span className="font-medium">Back to Search</span>
                 </Link>
-            </Box>
-            <Box
-                id="controls"
-                display="flex"
-                alignItems="center"
-                gap={3}
-                mb={4}
-            >
-                <Box as="label" fontSize="sm" mr={2} color="var(--muted)">
-                    Per page:
-                </Box>
-                <Select
-                    value={String(limit)}
-                    onChange={(e) =>
-                        onLimitChange(parseInt(e.target.value, 10) || limit)
-                    }
-                    width="80px"
-                >
-                    {[10, 20, 50, 100].map((n) => (
-                        <option key={n} value={String(n)}>
-                            {n}
-                        </option>
+
+                <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md p-2 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-2 px-2">
+                        <span className="text-sm text-zinc-500">Per page:</span>
+                        <select
+                            value={String(limit)}
+                            onChange={(e) => onLimitChange(parseInt(e.target.value, 10) || limit)}
+                            className="bg-transparent text-sm text-white focus:outline-none cursor-pointer"
+                        >
+                            {[10, 20, 50, 100].map((n) => (
+                                <option key={n} value={String(n)} className="bg-zinc-900">
+                                    {n}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="w-px h-6 bg-white/10" />
+
+                    <button
+                        onClick={toggleShuffle}
+                        className={`
+                            flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                            ${shuffleMode
+                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                                : 'hover:bg-white/5 text-zinc-400 hover:text-white'
+                            }
+                        `}
+                    >
+                        <Shuffle className="w-4 h-4" />
+                        <span>{shuffleMode ? "Shuffle On" : "Shuffle Off"}</span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="space-y-4 min-h-[50vh]">
+                {loading && (
+                    <div className="flex flex-col items-center justify-center py-20 text-zinc-500 animate-pulse">
+                        <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4" />
+                        Loading locations...
+                    </div>
+                )}
+
+                {!loading && items.length === 0 && (
+                    <div className="text-center py-20 text-zinc-500 border border-dashed border-white/10 rounded-xl">
+                        No items found.
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-4">
+                    {items.map((it, i) => (
+                        <ResultsCard
+                            key={it.id || `item-${offset}-${i}`}
+                            item={it}
+                            query={q}
+                            maxLen={400}
+                            onFindSimilar={handleFindSimilar}
+                        />
                     ))}
-                </Select>
-                <Button
-                    ml={3}
-                    onClick={toggleShuffle}
-                    aria-pressed={shuffleMode}
-                    bg={shuffleMode ? "var(--accent)" : "transparent"}
-                    color={shuffleMode ? "var(--button-text)" : "var(--text)"}
-                    borderColor={
-                        shuffleMode ? undefined : "var(--input-border)"
-                    }
-                    _hover={
-                        shuffleMode
-                            ? { bg: "var(--accent-700)" }
-                            : { bg: "var(--accent-50)" }
-                    }
-                >
-                    {shuffleMode ? "Shuffle: ON" : "Shuffle: OFF"}
-                </Button>
-            </Box>
-            <Box id="list">
-                {loading && <Box>Loading…</Box>}
-                {!loading && items.length === 0 && <Box>No items</Box>}
-                {items.map((it, i) => (
-                    <ResultsCard key={it.id || `item-${offset}-${i}`} item={it} query={q} maxLen={400} onFindSimilar={handleFindSimilar} />
-                ))}
-            </Box>
-            <Box
-                id="pager"
-                mt={4}
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-            >
-                <Box fontSize="sm" color="var(--muted)">
-                    Showing {Math.min(total, offset + 1)}-
-                    {Math.min(total, offset + limit)} of {total}
-                </Box>
-                <Box display="flex" gap={2}>
-                    <Button
+                </div>
+            </div>
+
+            {/* Pagination */}
+            <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-6">
+                <div className="text-sm text-zinc-500">
+                    Showing <span className="text-white">{Math.min(total, offset + 1)}</span> - <span className="text-white">{Math.min(total, offset + limit)}</span> of <span className="text-white">{total}</span>
+                </div>
+
+                <div className="flex gap-2">
+                    <button
                         onClick={() => {
                             const n = Math.max(0, offset - limit);
                             setOffset(n);
                             loadPage(n);
                         }}
-                        disabled={offset === 0}
-                        variant="outline"
-                        borderColor="var(--input-border)"
-                        color="var(--text)"
+                        disabled={offset === 0 || loading}
+                        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
-                        Prev
-                    </Button>
-                    <Button
+                        <ChevronLeft className="w-4 h-4" />
+                        Previous
+                    </button>
+                    <button
                         onClick={() => {
                             const n = offset + limit;
                             if (n < total) {
@@ -209,23 +210,21 @@ export default function BrowsePage() {
                                 loadPage(n);
                             }
                         }}
-                        disabled={offset + limit >= total}
-                        variant="outline"
-                        borderColor="var(--input-border)"
-                        color="var(--text)"
+                        disabled={offset + limit >= total || loading}
+                        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                         Next
-                    </Button>
-                </Box>
-            </Box>
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
 
-            {/* More Like This Modal */}
             <SimilarDocumentsModal
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 documentId={selectedItemId}
                 documentTitle={selectedItemTitle}
             />
-        </Box>
+        </div>
     );
 }
