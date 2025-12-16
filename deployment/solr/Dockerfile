@@ -1,15 +1,20 @@
-FROM solr:latest
+FROM solr:9.10.0
 
-# Switch to root to write into image filesystem, then return to solr user
-USER root
+# Install Maven for plugin build
+RUN apt-get update && apt-get install -y maven wget && rm -rf /var/lib/apt/lists/*
 
-# Create a configset directory and copy the repo solrconfig.xml into it
-RUN mkdir -p /opt/solr/server/solr/configsets/movies/conf
-COPY solrconfig.xml /opt/solr/server/solr/configsets/movies/conf/solrconfig.xml
-RUN chown -R solr:solr /opt/solr/server/solr/configsets/movies
+# Download and build clustering plugin from Solr source
+RUN wget https://archive.apache.org/dist/solr/solr/9.10.0/solr-9.10.0-src.tgz -O /tmp/solr-9.10.0-src.tgz \
+ && tar xzf /tmp/solr-9.10.0-src.tgz -C /tmp \
+ && CLUSTERING_DIR=$(find /tmp/solr-9.10.0-src -type d -path '*/modules/clustering' | head -n 1) \
+ && cd $CLUSTERING_DIR \
+ && mvn package -DskipTests \
+ && cp target/*.jar /opt/solr/server/solr-webapp/webapp/WEB-INF/lib/
 
-# Restore non-root user
-USER solr
+# Copy configset into image
+COPY ../../configsets /opt/solr/server/solr/configsets
 
-# Precreate the core using the baked configset name
-CMD ["solr-precreate", "movies", "movies"]
+# Expose Solr port
+EXPOSE 8983
+
+# Entrypoint is default (solr)

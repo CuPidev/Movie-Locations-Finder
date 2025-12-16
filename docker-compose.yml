@@ -1,16 +1,16 @@
+version: "3.8"
 services:
     solr:
-        image: movie-locations-solr:latest
+        build:
+            context: ./deployment/solr
+            dockerfile: Dockerfile
+        container_name: solr
         ports:
             - "8983:8983"
-        environment:
-            - SOLR_MODULES=clustering
-            - SOLR_OPTS=-Dsolr.clustering.enabled=true
         volumes:
             - solr_data:/var/solr
-            # Mount solrconfig.xml from the deployment path into the configset used by the core
-            - ./solrconfig.xml:/opt/solr/server/solr/configsets/movies/conf/solrconfig.xml:ro
-        command: ["solr-precreate", "movies", "movies"]
-
+        environment:
+            - SOLR_HOME=/var/solr/data
+        command: solr-precreate movies /opt/solr/server/solr/configsets/movies
 volumes:
     solr_data:
