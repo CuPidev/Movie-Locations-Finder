@@ -78,6 +78,14 @@ jobs:
                     .
                   echo "Created /tmp/repo_deploy.tar.gz (size: $(ls -lh /tmp/repo_deploy.tar.gz | awk '{print $5}'))"
 
+            - name: Build Solr image and save tar
+              run: |
+                  # Build the custom Solr image using the repo Dockerfile
+                  docker build -t movie-locations-solr:latest -f deployment/solr/Dockerfile . || true
+                  docker save movie-locations-solr:latest -o /tmp/solr_image.tar || true
+              env:
+                  DOCKER_BUILDKIT: 1
+
             - name: Copy tarball to VPS (password auth)
               env:
                   DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -88,8 +96,15 @@ jobs:
                   set -euo pipefail
                   if [ -n "${DEPLOY_PORT}" ]; then
                     sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -P "${DEPLOY_PORT}" /tmp/repo_deploy.tar.gz "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/repo_deploy.tar.gz"
+                    # Also copy docker image tar if it exists
+                    if [ -f /tmp/solr_image.tar ]; then
+                      sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -P "${DEPLOY_PORT}" /tmp/solr_image.tar "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/solr_image.tar" || true
+                    fi
                   else
                     sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 /tmp/repo_deploy.tar.gz "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/repo_deploy.tar.gz"
+                    if [ -f /tmp/solr_image.tar ]; then
+                      sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 /tmp/solr_image.tar "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/solr_image.tar" || true
+                    fi
                   fi
 
             - name: Remote extract, install and restart
@@ -157,6 +172,10 @@ jobs:
                       echo "Found docker-compose.yml in deployment path"
                     else
                       echo "docker-compose.yml not found in $DEPLOY_PATH; falling back to running solr container"
+                      # If CI shipped a prebuilt image tar, load it first
+                      if [ -f /tmp/solr_image.tar ]; then
+                        sudo docker load -i /tmp/solr_image.tar || true
+                      fi
                       sudo docker pull solr:latest
                       sudo docker run -d --name solr -p 8983:8983 -e SOLR_MODULES=clustering -v /var/solr:/var/solr solr:latest solr-precreate movies
                     fi
@@ -172,6 +191,11 @@ jobs:
                       cd "$DEPLOY_PATH"
                       # Pull latest images but don't fail the deploy if pull has issues
                       sudo docker compose pull || true
+                      # If CI shipped a solr image tar, load it so compose will use the exact CI-built image
+                      if [ -f /tmp/solr_image.tar ]; then
+                        echo "Loading CI-built Solr image into Docker"
+                        sudo docker load -i /tmp/solr_image.tar || true
+                      fi
                       # Stop and remove containers and named volumes so the fresh container will read repo-mounted config.
                       sudo docker compose down -v --remove-orphans || true
                       # Start freshly; force rebuild and recreate to ensure config from repo is used.

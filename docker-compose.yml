@@ -1,6 +1,6 @@
 services:
     solr:
-        image: solr:latest
+        image: movie-locations-solr:latest
         ports:
             - "8983:8983"
         environment:
