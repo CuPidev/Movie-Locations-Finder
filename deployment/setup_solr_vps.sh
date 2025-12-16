@@ -125,10 +125,10 @@ for i in {1..30}; do
 done
 
 
-# 8. Recreate Solr core '$SOLR_CORE'
+# 8. Recreate Solr core from repo configset
 echo "[8/8] Recreating Solr core '$SOLR_CORE'..."
 
-# Delete core if it exists
+# Delete existing core
 if curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=STATUS&core=$SOLR_CORE" \
   | grep -q "\"name\":\"$SOLR_CORE\""; then
   echo "Core exists — deleting"
@@ -136,19 +136,13 @@ if curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=STATUS&core=$SOL
   sleep 2
 fi
 
-# Create core from _default configset (creates schema + conf)
+# Create core from repo configset
 sudo -u "$SOLR_USER" "$SOLR_DIR/bin/solr" create \
   -c "$SOLR_CORE" \
-  -n "_default"
+  -d "$REPO_ROOT/configsets/movies"
 
-# OVERWRITE solrconfig.xml AFTER core creation
-sudo cp "$REPO_ROOT/solrconfig.xml" "/var/solr/data/$SOLR_CORE/conf/solrconfig.xml"
-sudo chown -R "$SOLR_USER:$SOLR_USER" "/var/solr/data/$SOLR_CORE"
+echo "✓ Core '$SOLR_CORE' created from configset"
 
-# Reload core to apply config
-curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=RELOAD&core=$SOLR_CORE" >/dev/null
-
-echo "✓ Core recreated cleanly"
 
 
 
