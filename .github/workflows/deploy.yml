@@ -130,6 +130,12 @@ jobs:
                       echo "Installing docker-compose..."
                       sudo apt-get update && sudo apt-get install -y docker-compose
                     fi
+                    echo "Killing any process using port 8983..."
+                    PID_8983=$(sudo lsof -t -i :8983 || true)
+                    if [ -n "$PID_8983" ]; then
+                      echo "Killing process(es) on port 8983: $PID_8983"
+                      sudo kill -9 $PID_8983 || true
+                    fi
                     echo "Stopping any existing Solr containers on port 8983..."
                     EXISTING_SOLR=$(sudo docker ps -q --filter "ancestor=solr" --filter "status=running")
                     if [ -n "$EXISTING_SOLR" ]; then
