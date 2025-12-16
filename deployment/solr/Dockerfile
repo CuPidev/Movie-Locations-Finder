@@ -11,7 +11,7 @@ RUN wget https://archive.apache.org/dist/solr/solr/9.10.0/solr-9.10.0-src.tgz -O
  && SOLR_SRC_DIR=$(ls -d /tmp/solr-9.10.0* | grep -v .tgz | head -n 1) \
  && CLUSTERING_DIR=$(find "$SOLR_SRC_DIR" -type d -path '*/modules/clustering' | head -n 1) \
  && cd "$CLUSTERING_DIR" \
- && mvn package -DskipTests \
+ && mvn package -DskipTests -Dmaven.repo.local=/tmp/.m2 \
  && cp target/*.jar /opt/solr/server/solr-webapp/webapp/WEB-INF/lib/
 
 # Copy configset into image
