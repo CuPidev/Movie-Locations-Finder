@@ -130,6 +130,25 @@ jobs:
                       echo "Installing docker-compose..."
                       sudo apt-get update && sudo apt-get install -y docker-compose
                     fi
+                    echo "Stopping any existing Solr containers on port 8983..."
+                    EXISTING_SOLR=$(sudo docker ps -q --filter "ancestor=solr" --filter "status=running")
+                    if [ -n "$EXISTING_SOLR" ]; then
+                      echo "Stopping running Solr containers: $EXISTING_SOLR"
+                      sudo docker stop $EXISTING_SOLR || true
+                    fi
+                    # Remove exited containers that might block the port
+                    EXITED_SOLR=$(sudo docker ps -a -q --filter "ancestor=solr" --filter "status=exited")
+                    if [ -n "$EXITED_SOLR" ]; then
+                      echo "Removing exited Solr containers: $EXITED_SOLR"
+                      sudo docker rm $EXITED_SOLR || true
+                    fi
+                    # Remove any container using port 8983 (not just solr ancestor)
+                    PORT_8983_CONTAINERS=$(sudo docker ps -q --filter "publish=8983")
+                    if [ -n "$PORT_8983_CONTAINERS" ]; then
+                      echo "Stopping containers using port 8983: $PORT_8983_CONTAINERS"
+                      sudo docker stop $PORT_8983_CONTAINERS || true
+                      sudo docker rm $PORT_8983_CONTAINERS || true
+                    fi
                     echo "Starting Docker Compose stack..."
                     sudo docker-compose up -d
                     echo "Waiting for Solr to be ready..."
