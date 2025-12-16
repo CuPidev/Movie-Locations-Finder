@@ -141,9 +141,11 @@ for i in {1..30}; do
   sleep 1
 done
 
-# 8. Recreate core to ensure config is applied
+
+# 8. Recreate Solr core with managed schema
 echo "[8/8] Recreating Solr core '$SOLR_CORE'..."
 
+# Delete core if it exists
 if curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=STATUS&core=$SOLR_CORE" \
   | grep -q "\"name\":\"$SOLR_CORE\""; then
   echo "Core exists — deleting"
@@ -151,11 +153,20 @@ if curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=STATUS&core=$SOL
   sleep 2
 fi
 
+# Create core using Solr default configset (provides managed-schema)
 sudo -u "$SOLR_USER" "$SOLR_DIR/bin/solr" create \
   -c "$SOLR_CORE" \
-  -d "/var/solr/data/$SOLR_CORE/conf"
+  -n "_default"
 
-echo "✓ Core recreated"
+# Overwrite solrconfig.xml AFTER core creation
+sudo cp "$REPO_ROOT/solrconfig.xml" "/var/solr/data/$SOLR_CORE/conf/solrconfig.xml"
+sudo chown -R "$SOLR_USER:$SOLR_USER" "/var/solr/data/$SOLR_CORE"
+
+# Reload core so new solrconfig.xml is picked up
+curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=RELOAD&core=$SOLR_CORE" >/dev/null
+
+echo "✓ Core recreated with managed schema"
+
 
 echo "========================================="
 echo "✓ Solr deployment COMPLETE"
