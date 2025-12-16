@@ -114,6 +114,15 @@ jobs:
                     sudo -u "${DEPLOY_USER}" tar -xzf /tmp/repo_deploy.tar.gz -C "$DEPLOY_PATH"
                     sudo rm -f /tmp/repo_deploy.tar.gz
                     cd "$DEPLOY_PATH"
+                    echo "Checking for docker and docker-compose..."
+                    if ! command -v docker &>/dev/null; then
+                      echo "Installing Docker..."
+                      curl -fsSL https://get.docker.com | sudo sh
+                    fi
+                    if ! command -v docker-compose &>/dev/null; then
+                      echo "Installing docker-compose..."
+                      sudo apt-get update && sudo apt-get install -y docker-compose
+                    fi
                     echo "Building and starting Docker Compose stack..."
                     sudo docker-compose build
                     sudo docker-compose up -d
