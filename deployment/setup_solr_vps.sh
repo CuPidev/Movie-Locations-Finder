@@ -92,16 +92,16 @@ fi
 
 # 4c. Install Solr Clustering (Carrot2) plugin
 echo "[4c/8] Installing Solr Clustering (Carrot2) plugin..."
-PLUGIN_SRC_DIR="/tmp/solr-$SOLR_VERSION/contrib/clustering"
 PLUGIN_LIB_DIR="$SOLR_DIR/server/solr-webapp/webapp/WEB-INF/lib"
+PLUGIN_INSTALLED=0
 
-# Download and extract Solr again if not present in /tmp for plugin JARs
+# Try to get clustering plugin from binary distribution first
+PLUGIN_SRC_DIR="/tmp/solr-$SOLR_VERSION/contrib/clustering"
 if [ ! -d "/tmp/solr-$SOLR_VERSION" ]; then
     cd /tmp
     if [ ! -f "solr-$SOLR_VERSION.tgz" ]; then
         wget -q --show-progress "$SOLR_URL" || {
             echo "WARNING: Failed to download Solr for plugin extraction. Skipping clustering plugin install."
-            PLUGIN_SKIP=1
         }
     fi
     tar xzf "solr-$SOLR_VERSION.tgz" || true
@@ -112,8 +112,37 @@ if [ -d "$PLUGIN_SRC_DIR/lib" ]; then
     sudo cp $PLUGIN_SRC_DIR/solr-clustering-*.jar "$PLUGIN_LIB_DIR/"
     sudo chown "$SOLR_USER:$SOLR_USER" "$PLUGIN_LIB_DIR"/*.jar
     echo "✓ Clustering plugin JARs copied to $PLUGIN_LIB_DIR"
-else
-    echo "⚠ Warning: Clustering plugin directory not found in Solr distribution. Plugin not installed. (This is not fatal.)"
+    PLUGIN_INSTALLED=1
+fi
+
+# If not found, build from source
+if [ "$PLUGIN_INSTALLED" -eq 0 ]; then
+    echo "Clustering plugin not found in binary. Building from source..."
+    SRC_URL="https://archive.apache.org/dist/solr/solr/$SOLR_VERSION/solr-$SOLR_VERSION-src.tgz"
+    cd /tmp
+    if [ ! -d "/tmp/solr-$SOLR_VERSION-src" ]; then
+        if [ ! -f "solr-$SOLR_VERSION-src.tgz" ]; then
+            wget -q --show-progress "$SRC_URL" || {
+                echo "WARNING: Failed to download Solr source. Skipping clustering plugin build."
+            }
+        fi
+        tar xzf "solr-$SOLR_VERSION-src.tgz"
+    fi
+    # Install Maven if not present
+    if ! command -v mvn &> /dev/null; then
+        echo "Installing Maven..."
+        sudo apt-get update && sudo apt-get install -y maven
+    fi
+    cd "/tmp/solr-$SOLR_VERSION-src/solr/contrib/clustering"
+    mvn package -DskipTests
+    # Copy built JARs
+    if ls target/*.jar 1> /dev/null 2>&1; then
+        sudo cp target/*.jar "$PLUGIN_LIB_DIR/"
+        sudo chown "$SOLR_USER:$SOLR_USER" "$PLUGIN_LIB_DIR"/*.jar
+        echo "✓ Clustering plugin JARs built and copied to $PLUGIN_LIB_DIR"
+    else
+        echo "⚠ Warning: Clustering plugin build failed. Plugin not installed. (This is not fatal.)"
+    fi
 fi
 
 # 5. Configure Solr environment
