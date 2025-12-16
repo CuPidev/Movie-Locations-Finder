@@ -2,7 +2,7 @@ name: Deploy to VPS
 
 on:
     push:
-        branches: [main, simple-dev]
+        branches: [main, simple-dev, exp]
 
 jobs:
     deploy:
@@ -124,15 +124,58 @@ jobs:
                     sudo rm -f /tmp/repo_deploy.tar.gz
 
                     # Setup Solr (if present) — keep as sudo since it may require root
-                    echo "=========================================" 
-                    echo "Setting up Apache Solr..."
                     echo "========================================="
-                    if [ -f "$DEPLOY_PATH/deployment/setup_solr_vps.sh" ]; then
-                      sudo chmod +x "$DEPLOY_PATH/deployment/setup_solr_vps.sh"
-                      cd "$DEPLOY_PATH/deployment"
-                      sudo bash setup_solr_vps.sh
+                    echo "Installing Docker + docker compose and running docker-compose.yml..."
+                    echo "========================================="
+
+                    # Install Docker if not already installed
+                    if ! command -v docker >/dev/null 2>&1; then
+                      echo "Installing Docker..."
+                      sudo apt-get update
+                      sudo apt-get install -y docker.io
+                      sudo systemctl enable --now docker
                     else
-                      echo "WARNING: Solr setup script not found, skipping Solr setup"
+                      echo "Docker already installed"
+                    fi
+
+                    # Install docker compose plugin if missing
+                    if ! docker compose version >/dev/null 2>&1; then
+                      echo "Installing docker compose plugin..."
+                      sudo apt-get update
+                      sudo apt-get install -y docker-compose-plugin
+                    else
+                      echo "docker compose plugin available"
+                    fi
+
+                    # Ensure deployment dir has the compose file (tarball extracted earlier)
+                    if [ -f "$DEPLOY_PATH/docker-compose.yml" ]; then
+                      echo "Found docker-compose.yml in deployment path"
+                    else
+                      echo "docker-compose.yml not found in $DEPLOY_PATH; falling back to running solr container"
+                      sudo docker pull solr:latest
+                      sudo docker run -d --name solr -p 8983:8983 -e SOLR_MODULES=clustering -v /var/solr:/var/solr solr:latest solr-precreate movies
+                    fi
+
+                    # Use docker compose to bring up services defined in the repo
+                    if [ -f "$DEPLOY_PATH/docker-compose.yml" ]; then
+                      echo "Starting services with docker compose..."
+                      sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH"
+                      cd "$DEPLOY_PATH"
+                      sudo docker compose pull || true
+                      sudo docker compose up -d
+
+                      # Wait for Solr to be ready (up to 60 seconds)
+                      for j in {1..60}; do
+                        if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS" > /dev/null 2>&1; then
+                          echo "Solr is ready"
+                          break
+                        fi
+                        if [ $j -eq 60 ]; then
+                          echo "ERROR: Solr from docker compose is not responding after 60 seconds"
+                          exit 1
+                        fi
+                        sleep 1
+                      done
                     fi
 
                     # Install Python dependencies inside a venv as the deploy user

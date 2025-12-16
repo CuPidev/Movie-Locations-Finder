@@ -1,10 +1,20 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 
-import { Box, Button, Input, Select, VStack, HStack, Heading, Text } from "@chakra-ui/react";
+import {
+    Box,
+    Button,
+    Input,
+    Select,
+    VStack,
+    HStack,
+    Heading,
+    Text,
+} from "@chakra-ui/react";
 import ResultsCard from "../components/ResultsCard";
 import SimilarDocumentsModal from "../components/SimilarDocumentsModal";
 import ClustersList from "../components/ClustersList";
+import TopicCard from "../components/TopicCard";
 
 export default function SearchPage() {
     const [q, setQ] = useState("");
@@ -23,12 +33,14 @@ export default function SearchPage() {
     // Modal state for "More Like This"
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-    const [selectedItemTitle, setSelectedItemTitle] = useState<string | undefined>(undefined);
+    const [selectedItemTitle, setSelectedItemTitle] = useState<
+        string | undefined
+    >(undefined);
 
     useEffect(() => {
         try {
             localStorage.setItem("hsf:k", k);
-        } catch (e) { }
+        } catch (e) {}
     }, [k]);
 
     const handleFindSimilar = (id: string, title?: string) => {
@@ -43,12 +55,20 @@ export default function SearchPage() {
         setSelectedItemTitle(undefined);
     };
 
-    // Map docId -> list of cluster labels
+    // Map docId -> list of cluster labels (defensive)
     const docClusterMap = useMemo(() => {
         const map: Record<string, string[]> = {};
+        if (!Array.isArray(clusters)) return map;
         clusters.forEach((c) => {
-            const label = c.labels.join(", ");
-            c.docs.forEach((docId: string) => {
+            const label = Array.isArray(c.labels)
+                ? c.labels.join(", ")
+                : String(c.labels || "");
+            const docs = Array.isArray(c.doc_ids)
+                ? c.doc_ids
+                : Array.isArray(c.docs)
+                ? c.docs
+                : [];
+            docs.forEach((docId: string) => {
                 if (!map[docId]) map[docId] = [];
                 map[docId].push(label);
             });
@@ -123,7 +143,11 @@ export default function SearchPage() {
                         <option value="20">20</option>
                         <option value="50">50</option>
                     </Select>
-                    <Button onClick={doSearch} isLoading={loading} colorScheme="blue">
+                    <Button
+                        onClick={doSearch}
+                        isLoading={loading}
+                        colorScheme="blue"
+                    >
                         Search
                     </Button>
                 </HStack>
@@ -139,17 +163,42 @@ export default function SearchPage() {
                 )}
 
                 <ClustersList
-                    clusters={clusters}
+                    clusters={
+                        Array.isArray(clusters)
+                            ? clusters.map((c: any) => ({
+                                  labels: c.labels || [],
+                                  docs: c.doc_ids || c.docs || [],
+                              }))
+                            : []
+                    }
                     selectedCluster={selectedCluster}
                     onSelectCluster={handleClusterSelect}
                 />
 
+                {/* Render Topic cards (collapsible, sorted by count from API) */}
+                {Array.isArray(clusters) && clusters.length > 0 && (
+                    <Box>
+                        {clusters.map((c: any, idx: number) => (
+                            <TopicCard
+                                key={
+                                    Array.isArray(c.labels)
+                                        ? c.labels.join("|")
+                                        : String(c.labels || idx)
+                                }
+                                cluster={c}
+                            />
+                        ))}
+                    </Box>
+                )}
+
                 <Box>
                     {loading && <Text>Loading...</Text>}
 
-                    {!loading && activeResults.length === 0 && results.length > 0 && (
-                        <Text>No results in this topic.</Text>
-                    )}
+                    {!loading &&
+                        activeResults.length === 0 &&
+                        results.length > 0 && (
+                            <Text>No results in this topic.</Text>
+                        )}
 
                     {!loading && activeResults.length > 0 && (
                         <VStack spacing={4} align="stretch">
@@ -165,7 +214,9 @@ export default function SearchPage() {
                         </VStack>
                     )}
 
-                    {!loading && results.length === 0 && q && <Text>No results found.</Text>}
+                    {!loading && results.length === 0 && q && (
+                        <Text>No results found.</Text>
+                    )}
                 </Box>
             </VStack>
 

@@ -1,5 +1,4 @@
-"""Small runner to start the Flask app from anywhere in the system.
-"""
+"""Small runner to start the Flask app from anywhere in the system."""
 
 import os
 import sys
@@ -12,5 +11,10 @@ if ROOT not in sys.path:
 from src.api import create_app
 
 if __name__ == "__main__":
+    # Use fixed host/port suitable for docker-compose; no envs used
+    host = "127.0.0.1"
+    port = 5001
+    debug = False
+
     app = create_app()
-    app.run(host="127.0.0.1", port=5001, debug=False)
+    app.run(host=host, port=port, debug=debug)

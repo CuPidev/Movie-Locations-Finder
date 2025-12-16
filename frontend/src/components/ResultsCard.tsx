@@ -38,10 +38,27 @@ interface ResultsCardProps {
     onFindSimilar?: (id: string, title?: string) => void;
 }
 
-export default function ResultsCard({ item, query, maxLen = 800, clusters, onFindSimilar }: ResultsCardProps) {
-    const fullText: string = item.content || "";
+export default function ResultsCard({
+    item,
+    query,
+    maxLen = 800,
+    clusters,
+    onFindSimilar,
+}: ResultsCardProps) {
+    // Safely coerce content to a string to avoid runtime errors when content is an object
+    const fullText: string = (() => {
+        const c = item && (item.content ?? item.contents);
+        if (typeof c === "string") return c;
+        try {
+            if (c == null) return "";
+            return JSON.stringify(c);
+        } catch (e) {
+            return String(c || "");
+        }
+    })();
+
     const shortText: string =
-        fullText.length > maxLen
+        fullText && fullText.length > maxLen
             ? fullText.slice(0, maxLen - 1) + "…"
             : fullText;
     const shouldHaveToggle = true;
@@ -68,7 +85,10 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
             transitionProperty="max-height"
             transitionDuration="220ms"
         >
-            <div className="result-content-wrapper" style={{ display: "flex", gap: "1rem" }}>
+            <div
+                className="result-content-wrapper"
+                style={{ display: "flex", gap: "1rem" }}
+            >
                 {/* Movie Poster */}
                 {item.image && (
                     <div className="result-poster" style={{ flexShrink: 0 }}>
@@ -83,7 +103,8 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                                 boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                             }}
                             onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none";
+                                (e.target as HTMLImageElement).style.display =
+                                    "none";
                             }}
                         />
                     </div>
@@ -100,7 +121,9 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                                 className="hover:underline"
                             >
                                 <div
-                                    id={item.id ? `title-${item.id}` : undefined}
+                                    id={
+                                        item.id ? `title-${item.id}` : undefined
+                                    }
                                     className="result-title font-semibold text-lg"
                                     dangerouslySetInnerHTML={{
                                         __html: highlightText(
@@ -127,17 +150,31 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
 
                     {/* Explicit Coordinates (instead of Address) */}
                     {(item.latitude || item.longitude) && (
-                        <Box mb={2} fontSize="xs" fontFamily="monospace" color="gray.600">
-                            <Box as="span" fontWeight="bold" fontFamily="sans-serif">
+                        <Box
+                            mb={2}
+                            fontSize="xs"
+                            fontFamily="monospace"
+                            color="gray.600"
+                        >
+                            <Box
+                                as="span"
+                                fontWeight="bold"
+                                fontFamily="sans-serif"
+                            >
                                 Coordinates:{" "}
                             </Box>
                             <a
                                 href={`https://www.google.com/maps?q=${item.latitude},${item.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ color: "var(--accent-700)", textDecoration: "underline", cursor: "pointer" }}
+                                style={{
+                                    color: "var(--accent-700)",
+                                    textDecoration: "underline",
+                                    cursor: "pointer",
+                                }}
                             >
-                                📍 {Number(item.latitude).toFixed(4)}, {Number(item.longitude).toFixed(4)}
+                                📍 {Number(item.latitude).toFixed(4)},{" "}
+                                {Number(item.longitude).toFixed(4)}
                             </a>
                         </Box>
                     )}
@@ -149,16 +186,22 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                             </Box>
                             <span
                                 dangerouslySetInnerHTML={{
-                                    __html: highlightText(item.location_description, query),
+                                    __html: highlightText(
+                                        item.location_description,
+                                        query
+                                    ),
                                 }}
                             />
                         </Box>
                     ) : (
                         /* Only show fallback description if it's NOT a location result (meaning no specific address/name found) */
-                        (!item.location_address && !item.location_name) && (
+                        !item.location_address &&
+                        !item.location_name && (
                             <p
                                 className="description mb-2"
-                                dangerouslySetInnerHTML={{ __html: displayedHtml }}
+                                dangerouslySetInnerHTML={{
+                                    __html: displayedHtml,
+                                }}
                             />
                         )
                     )}
@@ -166,10 +209,17 @@ export default function ResultsCard({ item, query, maxLen = 800, clusters, onFin
                     {/* Cluster Tags */}
                     {clusters && clusters.length > 0 && (
                         <Wrap spacing={2} mb={2}>
-                            {clusters.map(label => (
+                            {clusters.map((label) => (
                                 <WrapItem key={label}>
-                                    <Tag size="sm" variant="solid" colorScheme="gray" borderRadius="full">
-                                        <TagLabel fontSize="xs">{label}</TagLabel>
+                                    <Tag
+                                        size="sm"
+                                        variant="solid"
+                                        colorScheme="gray"
+                                        borderRadius="full"
+                                    >
+                                        <TagLabel fontSize="xs">
+                                            {label}
+                                        </TagLabel>
                                     </Tag>
                                 </WrapItem>
                             ))}

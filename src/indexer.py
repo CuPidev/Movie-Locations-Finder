@@ -2,7 +2,10 @@ import pysolr
 
 
 class Indexer:
-    def __init__(self, solr_url="http://localhost:8983/solr/movies"):
+    def __init__(self, solr_url: str = None):
+        # Default to localhost so the Flask API can be run locally while
+        # docker-compose (in this repo) brings up Solr only.
+        solr_url = solr_url or "http://localhost:8983/solr/movies"
         self.solr = pysolr.Solr(solr_url, always_commit=True)
 
     def add_document(self, doc_id: str, content: str, **kwargs):
@@ -26,14 +29,14 @@ class Indexer:
         """
         self.solr.delete(q="*:*")
 
-    def search(self, query: str, clustering: bool = False, **kwargs):
+    def search(self, query: str, clustering: bool = True, **kwargs):
         # Search across title and content fields
         # Use Solr's query syntax to search multiple fields
         solr_query = f"title:({query}) OR content:({query})"
         params = kwargs.copy()
         if clustering:
             params["clustering"] = "true"
-        
+
         return self.solr.search(solr_query, **params)
 
     def browse(
@@ -69,7 +72,9 @@ class Indexer:
 
         return self.solr.search(solr_query, **params)
 
-    def more_like_this(self, doc_id: str, mlt_fields: list = None, count: int = 10, **kwargs):
+    def more_like_this(
+        self, doc_id: str, mlt_fields: list = None, count: int = 10, **kwargs
+    ):
         """Find similar documents using Solr's Standard Request Handler with mlt=true."""
         if mlt_fields is None:
             mlt_fields = ["title", "content"]
@@ -88,26 +93,52 @@ class Indexer:
         params.update(kwargs)
 
         results = self.solr.search(f'id:"{doc_id}"', **params)
-        
+
         # pysolr stores moreLikeThis in raw_response, not as a direct attribute
         mlt_response = results.raw_response.get("moreLikeThis", {})
         mlt_data = mlt_response.get(doc_id, {})
-        
+
         # Handle both formats: direct list or dict with 'docs' key
         if isinstance(mlt_data, dict):
             return mlt_data.get("docs", [])
         return mlt_data
 
-    def group_by_location(self, query: str = None, limit: int = 10, group_limit: int = 5, **kwargs):
+    def get_docs_by_ids(self, ids: list, **kwargs):
+        """Retrieve documents from Solr by their id values, preserving order of provided ids.
+
+        Returns a list of document dicts in the same order as `ids` for any ids that exist.
+        """
+        if not ids:
+            return []
+
+        # Build an OR query for ids and request enough rows
+        # Ensure values are quoted in case ids contain special chars
+        q = " OR ".join(f'id:"{str(i)}"' for i in ids)
+        params = {"rows": max(1, len(ids)), "fl": "*,score"}
+        params.update(kwargs)
+
+        results = self.solr.search(q, **params)
+        items = [dict(d) for d in results]
+
+        # Preserve requested order
+        id_to_doc = {str(d.get("id")): d for d in items if d.get("id")}
+        ordered = [id_to_doc.get(str(i)) for i in ids if id_to_doc.get(str(i))]
+        return ordered
+
+    def group_by_location(
+        self, query: str = None, limit: int = 10, group_limit: int = 5, **kwargs
+    ):
         """Search with results grouped by location_name.
-        
+
         Returns results grouped by location, showing multiple movies per location.
         """
         if query:
-            solr_query = f"title:({query}) OR content:({query}) OR location_name:({query})"
+            solr_query = (
+                f"title:({query}) OR content:({query}) OR location_name:({query})"
+            )
         else:
             solr_query = "*:*"
-        
+
         params = {
             "group": "true",
             "group.field": "location_name",
@@ -116,13 +147,15 @@ class Indexer:
             "rows": limit,  # Number of groups to return
         }
         params.update(kwargs)
-        
+
         results = self.solr.search(solr_query, **params)
         return results
 
-    def nearby_locations(self, lat: float, lon: float, radius_km: float = 50, limit: int = 20, **kwargs):
+    def nearby_locations(
+        self, lat: float, lon: float, radius_km: float = 50, limit: int = 20, **kwargs
+    ):
         """Find filming locations within a radius of a point.
-        
+
         Uses Solr's spatial search with geodist() function.
         """
         # Only query documents that have location coordinates
@@ -133,7 +166,6 @@ class Indexer:
             "rows": limit,
         }
         params.update(kwargs)
-        
+
         results = self.solr.search("location_pt:*", **params)
         return results
-
