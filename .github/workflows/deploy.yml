@@ -131,7 +131,7 @@ jobs:
                       sudo apt-get update && sudo apt-get install -y docker-compose
                     fi
                     echo "Starting Docker Compose stack..."
-                    sudo docker-compose up -d > /dev/null 2>&1
+                    sudo docker-compose up -d
                     echo "Waiting for Solr to be ready..."
                     for i in {1..60}; do
                       if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS" > /dev/null 2>&1; then
