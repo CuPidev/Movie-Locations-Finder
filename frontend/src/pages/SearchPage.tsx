@@ -99,7 +99,10 @@ export default function SearchPage() {
             <div className={`flex flex-col items-center transition-all duration-700 ease-out ${results.length > 0 ? 'py-8 min-h-[0vh]' : 'py-32 justify-center min-h-[60vh]'}`}>
 
                 <h1 className={`text-4xl md:text-6xl font-black tracking-tighter text-foreground mb-2 text-center transition-all ${results.length > 0 ? 'hidden' : 'block'}`}>
-                    Find Your <span className="text-cyan-400 text-glow">Scene</span>
+                    Find Your <span className="relative inline-block pr-6">
+                        <span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-purple-600 blur-lg opacity-80 select-none pr-2 pb-1" aria-hidden="true">Scene</span>
+                        <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-purple-600 font-black pr-2 pb-1">Scene</span>
+                    </span>
                 </h1>
 
                 <p className={`text-muted-foreground text-lg mb-8 text-center max-w-lg ${results.length > 0 ? 'hidden' : 'block'}`}>
@@ -135,10 +138,10 @@ export default function SearchPage() {
                             <button
                                 onClick={doSearch}
                                 disabled={loading}
-                                className="px-6 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded-lg border border-primary/30 hover:border-primary/60 transition-all shadow-[0_0_20px_rgba(6,182,212,0.1)] hover:shadow-[0_0_30px_rgba(6,182,212,0.2)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2.5 bg-secondary/5 hover:bg-secondary/20 text-muted-foreground hover:text-secondary font-bold rounded-lg border border-secondary/20 hover:border-secondary/60 transition-all shadow-[0_0_20px_rgba(168,85,247,0.05)] hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? (
-                                    <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                    <div className="w-5 h-5 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
                                 ) : "Search"}
                             </button>
                         </div>
@@ -162,7 +165,7 @@ export default function SearchPage() {
             {(results.length > 0 || loading) && (
                 <div className="animate-fade-in relative z-10">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-semibold text-white/90">
+                        <h2 className="text-xl font-semibold text-foreground">
                             {loading ? 'Searching...' : `Found ${results.length} locations`}
                         </h2>
                         {/* Clusters List could go here */}

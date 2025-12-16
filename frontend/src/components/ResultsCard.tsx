@@ -30,7 +30,7 @@ function highlightText(text: string, query?: string) {
     if (tokens.length === 0) return escaped;
     const re = new RegExp("(" + tokens.join("|") + ")", "ig");
     // Use semantic colors for highlight
-    return escaped.replace(re, '<span class="bg-primary/20 text-primary px-0.5 rounded font-medium border border-primary/20">$1</span>');
+    return escaped.replace(re, '<span class="bg-primary/15 px-0.5 rounded font-medium">$1</span>');
 }
 
 interface ResultsCardProps {
@@ -143,7 +143,7 @@ export default function ResultsCard({
                             href={`https://www.google.com/maps?q=${item.latitude},${item.longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-mono text-primary hover:text-primary/80 mb-3 hover:underline decorations-primary/30 underline-offset-4 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground mb-3 hover:underline decoration-border underline-offset-4 transition-colors"
                         >
                             <MapPin className="w-3.5 h-3.5" />
                             {Number(item.latitude).toFixed(4)}, {Number(item.longitude).toFixed(4)}

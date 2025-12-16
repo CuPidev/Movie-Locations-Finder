@@ -13,15 +13,14 @@ function Header() {
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/20 backdrop-blur-lg transition-all duration-300">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <a href="/" className="flex items-center gap-2 group">
-                    <div className="relative flex items-center justify-center p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all duration-300 overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <Clapperboard className="w-5 h-5 text-primary relative z-10 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
+                    <div className="relative flex items-center justify-center p-2 rounded-xl bg-gradient-to-br from-cyan-500/10 to-purple-500/10 group-hover:from-cyan-500/20 group-hover:to-purple-500/20 transition-all duration-300 overflow-hidden border border-white/5 group-hover:border-white/10">
+                        <Clapperboard className="w-5 h-5 text-cyan-500 group-hover:text-purple-400 transition-colors relative z-10 group-hover:scale-110 group-hover:-rotate-12 duration-300" />
                     </div>
                     <div className="flex flex-col leading-none">
-                        <span className="font-black text-lg tracking-tighter text-foreground group-hover:text-primary transition-colors">
+                        <span className="font-black text-lg tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-purple-600">
                             SCENE
                         </span>
-                        <span className="text-[0.6rem] font-bold tracking-[0.2em] text-muted-foreground uppercase group-hover:text-primary/80 transition-colors">
+                        <span className="text-[0.6rem] font-bold tracking-[0.2em] text-purple-500/80 uppercase group-hover:text-purple-500 transition-colors pl-0.5">
                             SCOUT
                         </span>
                     </div>

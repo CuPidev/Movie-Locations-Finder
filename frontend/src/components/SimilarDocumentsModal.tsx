@@ -71,7 +71,6 @@ export default function SimilarDocumentsModal({
                     <div>
                         <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                             <span>Similar Locations</span>
-                            <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">AI Powered</span>
                         </h3>
                         {documentTitle && (
                             <p className="text-sm text-muted-foreground mt-0.5 max-w-sm truncate">
