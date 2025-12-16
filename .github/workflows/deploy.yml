@@ -93,6 +93,10 @@ jobs:
                     sshpass -p "${DEPLOY_PASSWORD}" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 /tmp/repo_deploy.tar.gz "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/repo_deploy.tar.gz"
                   fi
 
+            - name: Build Solr Docker image
+              run: |
+                  docker-compose build
+
             - name: Remote extract and Docker Compose deploy
               env:
                   DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -123,9 +127,8 @@ jobs:
                       echo "Installing docker-compose..."
                       sudo apt-get update && sudo apt-get install -y docker-compose
                     fi
-                    echo "Building and starting Docker Compose stack..."
-                    sudo docker-compose build
-                    sudo docker-compose up -d
+                    echo "Starting Docker Compose stack..."
+                    sudo docker-compose up -d > /dev/null 2>&1
                     echo "Waiting for Solr to be ready..."
                     for i in {1..60}; do
                       if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS" > /dev/null 2>&1; then
