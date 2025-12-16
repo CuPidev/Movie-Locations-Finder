@@ -120,7 +120,7 @@ if [ "$PLUGIN_INSTALLED" -eq 0 ]; then
     echo "Clustering plugin not found in binary. Building from source..."
     SRC_URL="https://archive.apache.org/dist/solr/solr/$SOLR_VERSION/solr-$SOLR_VERSION-src.tgz"
     cd /tmp
-    if [ ! -d "/tmp/solr-$SOLR_VERSION-src" ]; then
+    if ! ls -d /tmp/solr-*-src 1>/dev/null 2>&1; then
         if [ ! -f "solr-$SOLR_VERSION-src.tgz" ]; then
             wget -q --show-progress "$SRC_URL" || {
                 echo "WARNING: Failed to download Solr source. Skipping clustering plugin build."
@@ -130,19 +130,33 @@ if [ "$PLUGIN_INSTALLED" -eq 0 ]; then
         echo "Extracting Solr source..."
         tar xzf "solr-$SOLR_VERSION-src.tgz" || { echo "ERROR: Failed to extract Solr source tarball."; exit 1; }
     fi
+    # Dynamically detect the extracted source directory
+    SOLR_SRC_DIR=$(ls -d /tmp/solr-*-src 2>/dev/null | head -n 1)
+    if [ -z "$SOLR_SRC_DIR" ]; then
+        echo "ERROR: Could not find extracted Solr source directory in /tmp."
+        ls -l /tmp | grep solr
+        exit 1
+    else
+        echo "✓ Detected Solr source directory: $SOLR_SRC_DIR"
+    fi
     # Install Maven if not present
     if ! command -v mvn &> /dev/null; then
         echo "Installing Maven..."
         sudo apt-get update && sudo apt-get install -y maven
     fi
-    # Find the clustering plugin directory dynamically
-    CLUSTERING_DIR=$(find /tmp/solr-$SOLR_VERSION-src -type d -name clustering | head -n 1)
-    if [ -z "$CLUSTERING_DIR" ]; then
-        echo "ERROR: Could not find clustering plugin directory in Solr source. Directory tree under /tmp/solr-$SOLR_VERSION-src:"
-        find /tmp/solr-$SOLR_VERSION-src -type d | grep clustering || true
-        exit 1
+    # Prefer modules/clustering, fallback to contrib/clustering
+    MODULES_CLUSTERING=$(find "$SOLR_SRC_DIR" -type d -path '*/modules/clustering' | head -n 1)
+    CONTRIB_CLUSTERING=$(find "$SOLR_SRC_DIR" -type d -path '*/contrib/clustering' | head -n 1)
+    if [ -n "$MODULES_CLUSTERING" ]; then
+        CLUSTERING_DIR="$MODULES_CLUSTERING"
+        echo "✓ Found clustering plugin in modules: $CLUSTERING_DIR"
+    elif [ -n "$CONTRIB_CLUSTERING" ]; then
+        CLUSTERING_DIR="$CONTRIB_CLUSTERING"
+        echo "✓ Found clustering plugin in contrib: $CLUSTERING_DIR"
     else
-        echo "✓ Found clustering plugin directory: $CLUSTERING_DIR"
+        echo "ERROR: Could not find clustering plugin directory in Solr source. Directory tree under $SOLR_SRC_DIR:"
+        find "$SOLR_SRC_DIR" -type d | grep clustering || true
+        exit 1
     fi
     cd "$CLUSTERING_DIR"
     mvn package -DskipTests
