@@ -8,8 +8,8 @@ services:
       - SOLR_OPTS=-Dsolr.clustering.enabled=true
     volumes:
       - solr_data:/var/solr
-
-    command: [ "solr-precreate", "movies" ]
+      - ./solrconfig.xml:/var/solr/solrconfig_custom.xml
+    command: bash -c "precreate-core movies; cp /var/solr/solrconfig_custom.xml /var/solr/data/movies/conf/solrconfig.xml; exec solr-foreground"
 
 volumes:
   solr_data:
