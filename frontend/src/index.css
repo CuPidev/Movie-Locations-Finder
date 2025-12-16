@@ -2,441 +2,139 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ported styles from original web/style.css - keeps look consistent with prior UI */
-body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-}
-
-/* expose a few simple variables for light/dark backgrounds and text */
-:root {
-    --bg: #f8fafc;
-    --text: #0f172a;
-    --muted: #6b7280;
-    --input-bg: #ffffff;
-    --input-border: #d1d5db;
-    --button-text: #ffffff;
-    /* card / result defaults (light mode) */
-    --card-bg: #ffffff;
-    --card-border: rgba(230, 230, 230, 0.7);
-    --card-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
-    --card-hover-shadow: 0 10px 30px rgba(2, 6, 23, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    --card-title: #0f172a;
-    --card-highlight-bg: var(--accent-50);
-    --card-highlight-color: var(--accent-700);
-    --card-fade-start: rgba(255, 255, 255, 0);
-    --card-fade-end: rgba(255, 255, 255, 0.95);
-    --card-showmore-bg: rgba(255, 255, 255, 0.95);
-}
-
-.theme-dark {
-    /* Near-black, minimal-blue dark background */
-    --bg: #0b0b0b; /* near-black */
-    --text: #e5e7eb; /* gray-200 */
-    --muted: #9ca3af; /* muted gray for secondary text */
-    /* inputs slightly lighter than the page bg for separation */
-    --input-bg: #0e0e0e; /* very dark, slightly above bg */
-    --input-border: rgba(255, 255, 255, 0.06);
-    --button-text: #ffffff;
-    /* card / result dark-mode overrides */
-    /* less-blue, more neutral dark gray to reduce blue cast */
-    --card-bg: #111316; /* neutral very-dark gray */
-    --card-border: rgba(255, 255, 255, 0.03);
-    --card-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
-    --card-hover-shadow: 0 18px 40px rgba(0, 0, 0, 0.65),
-        inset 0 1px 0 rgba(255, 255, 255, 0.02);
-    --card-title: #e6eef6; /* slightly bluish off-white for titles */
-    --card-highlight-bg: rgba(255, 255, 255, 0.04);
-    --card-highlight-color: var(--accent-50);
-    --card-fade-start: rgba(0, 0, 0, 0);
-    --card-fade-end: rgba(11, 11, 11, 0.94);
-    --card-showmore-bg: rgba(255, 255, 255, 0.04);
-}
-
-/* apply the variables to the app container and body fallback */
-body {
-    background: var(--bg);
-    color: var(--text);
-}
-.result {
-    margin: 0.6rem 0;
-    padding: 0.75rem;
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    box-shadow: var(--card-shadow);
-    max-height: var(--card-collapsed-height, 14rem);
-    overflow: hidden;
-    transition: max-height 220ms ease, box-shadow 180ms ease,
-        transform 180ms ease;
-    position: relative;
-}
-/* hover: subtle lift + accent border + inner sheen */
-.result:hover {
-    transform: translateY(-4px);
-    border-color: var(--accent-700);
-    box-shadow: var(--card-hover-shadow);
-}
-
-/* keyboard focus outline for accessibility */
-.result:focus-within,
-.result:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 4px var(--accent-50), 0 6px 20px rgba(2, 6, 23, 0.06);
-}
-.result.expanded {
-    max-height: 2000px;
-}
-.description {
-    padding-bottom: 3rem;
-    color: var(--muted);
-    margin-top: 0.4rem;
-    font-size: 1rem;
-    line-height: 1.45;
-}
-.result-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-}
-.result-title {
-    font-weight: 600;
-    color: var(--card-title);
-}
-.country-badge {
-    background: #eef2ff;
-    color: #3730a3;
-    padding: 0.15rem 0.5rem;
-    border-radius: 9999px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-}
-.score {
-    color: #6b7280;
-    font-size: 0.85rem;
-}
-.show-more {
-    position: absolute;
-    right: 0.6rem;
-    bottom: 0.6rem;
-    background: var(--card-showmore-bg);
-    padding: 0.25rem 0.6rem;
-    border-radius: 6px;
-    color: var(--accent-700);
-    font-size: 0.95rem;
-    cursor: pointer;
-    z-index: 6;
-    border: 1px solid var(--accent);
-}
-.result.expanded .show-more {
-    position: static;
-    margin-top: 0.5rem;
-    background: transparent;
-    border: none;
-    padding: 0;
-}
-.result:not(.expanded)::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 2rem;
-    pointer-events: none;
-    background: linear-gradient(var(--card-fade-start), var(--card-fade-end));
-    z-index: 4;
-}
-.highlight {
-    background: var(--card-highlight-bg);
-    padding: 0 0.12rem;
-    border-radius: 2px;
-    color: var(--card-highlight-color);
-}
-.meta {
-    margin-top: 0.35rem;
-    color: var(--muted);
-    font-size: 0.85rem;
-}
-.spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ccc;
-    border-top-color: #333;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-left: 8px;
-    vertical-align: middle;
-}
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-:root {
-    --card-collapsed-height: 14rem;
-    --accent: #0d9488;
-    --accent-700: #0f766e;
-    --accent-50: #ecfdf5;
-}
-
-/* Inputs, selects and controls follow theme variables defined in :root and
-    overridden by .theme-dark above. */
-
-/* Broad input/select/textarea coverage to override utility classes and browser defaults */
-input,
-input[type="text"],
-input[type="search"],
-input[type="email"],
-input[type="number"],
-select,
-textarea {
-    background: var(--input-bg) !important;
-    color: var(--text) !important;
-    border-color: var(--input-border) !important;
-    -webkit-text-fill-color: var(--text) !important; /* for autofill */
-}
-
-/* Strong theme-specific override: when dark theme is active, force inputs to use
-   the theme variables (helps beat UA styles or other competing rules). */
-html.theme-dark input,
-html.theme-dark input[type="text"],
-html.theme-dark textarea,
-html.theme-dark select,
-html.theme-dark #q {
-    background: var(--input-bg) !important;
-    color: var(--text) !important;
-    -webkit-text-fill-color: var(--text) !important;
-    -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
-    box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
-    border-color: var(--input-border) !important;
-}
-
-/* Autofill styles (Chrome/Safari) - keep inputs consistent when browser fills values */
-input:-webkit-autofill,
-textarea:-webkit-autofill,
-select:-webkit-autofill {
-    background-color: var(--input-bg) !important;
-    background-image: none !important;
-    -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-    -webkit-text-fill-color: var(--text) !important;
-}
-
-/* Additional autofill and internal pseudo-classes to catch Chromium variants */
-input:-webkit-autofill:focus,
-input:-webkit-autofill:hover,
-textarea:-webkit-autofill:focus,
-textarea:-webkit-autofill:hover,
-select:-webkit-autofill:focus,
-select:-webkit-autofill:hover,
-input:-internal-autofill-selected,
-textarea:-internal-autofill-selected,
-select:-internal-autofill-selected {
-    background-color: var(--input-bg) !important;
-    background-image: none !important;
-    -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-    box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-    -webkit-text-fill-color: var(--text) !important;
-}
-
-/* Ensure selects and options show proper colors in dark mode */
-select,
-select option {
-    background: var(--input-bg) !important;
-    color: var(--text) !important;
-}
-/* Extra defensive overrides: remove any background-image or native appearance that can cause
-   inputs to appear with a different fill (covers some Chromium variations). */
-input,
-textarea,
-select {
-    background-image: none !important;
-    background-clip: padding-box !important;
-    -webkit-appearance: none !important;
-    appearance: none !important;
-    -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
-    box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
-}
-
-/* Target the main search input specifically if it's still stubborn */
-#q {
-    background: var(--input-bg) !important;
-    background-image: none !important;
-    color: var(--text) !important;
-    -webkit-text-fill-color: var(--text) !important;
-    -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
-    box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
-}
-
-input::placeholder,
-textarea::placeholder {
-    color: var(--muted) !important;
-    opacity: 1;
-}
-
-/* Replace Tailwind hardcoded text-white in buttons with theme-aware var */
-.text-white {
-    color: var(--button-text) !important;
-}
-
-/* Focus visuals for inputs using accent */
-input:focus,
-select:focus,
-textarea:focus {
-    outline: none;
-    border-color: var(--accent-700) !important;
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04), 0 0 0 6px var(--accent-50);
-}
-
-/* Buttons */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0.75rem;
-    background: var(--input-bg);
-    color: var(--text);
-    border: 1px solid var(--input-border);
-    border-radius: 6px;
-    cursor: pointer;
-}
-.btn:hover {
-    filter: brightness(0.98);
-}
-.btn[disabled] {
-    opacity: 0.5;
-    cursor: default;
-}
-
-/* Primary button variant uses accent */
-.btn-primary {
-    background: var(--accent);
-    color: var(--button-text);
-    border-color: var(--accent-700);
-}
-.btn-primary:hover {
-    background: var(--accent-700);
-}
-
-/* Accent text for links */
-.accent-text {
-    color: var(--accent) !important;
-}
-.accent-text:hover {
-    color: var(--accent-700) !important;
-}
-@media (max-width: 640px) {
-    :root {
-        --card-collapsed-height: 16rem;
-    }
-}
-
-/* Theme class variants (applied on <html> by ThemeSelector) */
-.theme-teal {
-    --accent: #0d9488;
-    --accent-700: #0f766e;
-    --accent-50: #ecfdf5;
-}
-.theme-indigo {
-    --accent: #4f46e5;
-    --accent-700: #4338ca;
-    --accent-50: #eef2ff;
-}
-.theme-terracotta {
-    --accent: #c2410c;
-    --accent-700: #9a3412;
-    --accent-50: #fff7ed;
-}
-.theme-olive {
-    --accent: #15803d;
-    --accent-700: #166534;
-    --accent-50: #f0fdf4;
-}
-
-/* Accent class overrides to keep earlier look */
-.bg-blue-600 {
-    background-color: var(--accent) !important;
-}
-.bg-blue-700 {
-    background-color: var(--accent-700) !important;
-}
-.text-blue-600 {
-    color: var(--accent) !important;
-}
-.border-blue-600 {
-    border-color: var(--accent) !important;
-}
-.hover\:bg-blue-50:hover {
-    background-color: var(--accent-50) !important;
-}
-
 @layer base {
   :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 0 0% 9%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 0 0% 3.9%;
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
-        --radius: 0.5rem;
-    }
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 180 100% 35%;
+    /* Darker cyan for light mode visibility */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 263.4 70% 50.4%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 180 100% 35%;
+
+    --radius: 0.75rem;
+
+    /* Custom Cinematics - Light Mode Adjustments */
+    --neon-cyan: #0891b2;
+    --neon-pink: #9333ea;
+  }
+
   .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 0 0% 9%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
-    }
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 180 100% 50%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 263.4 70% 50.4%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 180 100% 50%;
+
+    /* Custom Cinematics - Dark Mode */
+    --neon-cyan: #00f3ff;
+    --neon-pink: #bc00dd;
+  }
 }
 
 @layer base {
   * {
     @apply border-border;
-    }
+  }
+
   body {
     @apply bg-background text-foreground;
-    }
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-image: radial-gradient(circle at 50% 0%, rgba(0, 243, 255, 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(188, 0, 221, 0.08) 0%, transparent 30%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-black/40 backdrop-blur-md border border-white/10 shadow-xl;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+  }
+
+  .text-glow-purple {
+    text-shadow: 0 0 10px rgba(188, 0, 221, 0.5);
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }

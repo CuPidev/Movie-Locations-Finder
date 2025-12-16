@@ -1,5 +1,3 @@
-import { Box, Wrap, WrapItem, Tag, TagLabel, Text } from "@chakra-ui/react";
-
 interface Cluster {
     labels: string[];
     docs: string[];
@@ -15,30 +13,32 @@ export default function ClustersList({ clusters, selectedCluster, onSelectCluste
     if (!clusters || clusters.length === 0) return null;
 
     return (
-        <Box mb={4} p={3} bg="var(--card-bg)" borderRadius="md" borderWidth="1px" borderColor="var(--card-border)">
-            <Text fontSize="sm" fontWeight="bold" mb={2} color="var(--text)">
-                Topics found (click to filter):
-            </Text>
-            <Wrap spacing={2}>
+        <div className="mb-6 animate-fade-in">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Filter by Topic:
+            </p>
+            <div className="flex flex-wrap gap-2">
                 {clusters.map((cluster, idx) => {
                     const label = cluster.labels.join(", ");
                     const isSelected = selectedCluster === label;
                     return (
-                        <WrapItem key={idx}>
-                            <Tag
-                                size="md"
-                                variant={isSelected ? "solid" : "subtle"}
-                                colorScheme={isSelected ? "teal" : "gray"}
-                                cursor="pointer"
-                                onClick={() => onSelectCluster(label)}
-                                _hover={{ opacity: 0.8 }}
-                            >
-                                <TagLabel>{label}</TagLabel>
-                            </Tag>
-                        </WrapItem>
+                        <button
+                            key={idx}
+                            onClick={() => onSelectCluster && onSelectCluster(label)}
+                            disabled={!onSelectCluster}
+                            className={`
+                                px-3 py-1.5 rounded-full text-xs font-medium border transition-all
+                                ${isSelected
+                                    ? "bg-primary text-primary-foreground border-primary shadow-[0_0_10px_rgba(6,182,212,0.4)]"
+                                    : "bg-card/40 border-border/60 text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-card/80"
+                                }
+                            `}
+                        >
+                            {label}
+                        </button>
                     );
                 })}
-            </Wrap>
-        </Box>
+            </div>
+        </div>
     );
 }

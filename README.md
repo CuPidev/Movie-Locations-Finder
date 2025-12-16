@@ -49,7 +49,7 @@ This project uses Apache Solr for search functionality. To install Solr and crea
 **Option 1: Using Docker (Recommended)**
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 **Option 2: Manual Installation**
@@ -83,7 +83,7 @@ The repository already contains data that is ready to be indexed in the `data` d
 
 1. movie-locations.com
 2. cinemapper.com
-3. TO BE ADDED
+3. moviefilminglocations.ca
 
 Before running the indexer, make sure Solr is running. Then run:
 
@@ -98,6 +98,7 @@ To get updated data, run the crawler using
 ```bash
 python ./crawler/movielocations_crawler.py
 python ./crawler/cinemapper_crawler.py
+python ./crawler/movielocationsca_crawler.py
 ```
 
 after which new data will be available in the `temp` directory. Move the files from `temp` to `data` and run the indexer again.
@@ -124,3 +125,4 @@ curl "http://localhost:8983/solr/movies/select?q=*:*&rows=0"
 **Solr not starting?**
 - Ensure Java 11+ is installed: `java -version`
 - Check port 8983 is available
+Sonar Check test
