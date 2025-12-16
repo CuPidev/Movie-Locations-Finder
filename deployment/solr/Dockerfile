@@ -12,7 +12,7 @@ RUN wget https://archive.apache.org/dist/solr/solr/9.10.0/solr-9.10.0-src.tgz -O
  && cp target/*.jar /opt/solr/server/solr-webapp/webapp/WEB-INF/lib/
 
 # Copy configset into image
-COPY ../../configsets /opt/solr/server/solr/configsets
+COPY configsets /opt/solr/server/solr/configsets
 
 # Expose Solr port
 EXPOSE 8983
