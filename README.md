@@ -49,9 +49,6 @@ This project uses Apache Solr for search functionality. To install Solr and crea
 **Option 1: Using Docker (Recommended)**
 
 ```bash
-# macOS
-docker-compose up -d
-# linux
 docker compose up -d
 ```
 
