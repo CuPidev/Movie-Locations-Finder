@@ -86,7 +86,7 @@ The repository already contains data that is ready to be indexed in the `data` d
 
 1. movie-locations.com
 2. cinemapper.com
-3. TO BE ADDED
+3. moviefilminglocations.ca
 
 Before running the indexer, make sure Solr is running. Then run:
 
