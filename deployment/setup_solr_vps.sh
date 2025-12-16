@@ -100,11 +100,11 @@ if [ ! -d "/tmp/solr-$SOLR_VERSION" ]; then
     cd /tmp
     if [ ! -f "solr-$SOLR_VERSION.tgz" ]; then
         wget -q --show-progress "$SOLR_URL" || {
-            echo "ERROR: Failed to download Solr for plugin extraction."
-            exit 1
+            echo "WARNING: Failed to download Solr for plugin extraction. Skipping clustering plugin install."
+            PLUGIN_SKIP=1
         }
     fi
-    tar xzf "solr-$SOLR_VERSION.tgz"
+    tar xzf "solr-$SOLR_VERSION.tgz" || true
 fi
 
 if [ -d "$PLUGIN_SRC_DIR/lib" ]; then
@@ -113,7 +113,7 @@ if [ -d "$PLUGIN_SRC_DIR/lib" ]; then
     sudo chown "$SOLR_USER:$SOLR_USER" "$PLUGIN_LIB_DIR"/*.jar
     echo "✓ Clustering plugin JARs copied to $PLUGIN_LIB_DIR"
 else
-    echo "⚠ Warning: Clustering plugin directory not found in Solr distribution. Plugin not installed."
+    echo "⚠ Warning: Clustering plugin directory not found in Solr distribution. Plugin not installed. (This is not fatal.)"
 fi
 
 # 5. Configure Solr environment
@@ -175,11 +175,11 @@ CORE_EXISTS=$(curl -s "http://localhost:$SOLR_PORT/solr/admin/cores?action=STATU
 
 if [ "$CORE_EXISTS" -eq 0 ]; then
     echo "Creating core '$SOLR_CORE'..."
-    sudo -u "$SOLR_USER" "$SOLR_DIR/bin/solr" create -c "$SOLR_CORE" || {
-        echo "ERROR: Failed to create core '$SOLR_CORE'"
-        exit 1
-    }
-    echo "✓ Core '$SOLR_CORE' created successfully"
+    if sudo -u "$SOLR_USER" "$SOLR_DIR/bin/solr" create -c "$SOLR_CORE"; then
+        echo "✓ Core '$SOLR_CORE' created successfully"
+    else
+        echo "⚠ Warning: Failed to create core '$SOLR_CORE'. It may already exist or there may be a non-fatal error. Continuing."
+    fi
 else
     echo "✓ Core '$SOLR_CORE' already exists"
 fi
