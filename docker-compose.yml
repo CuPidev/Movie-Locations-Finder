@@ -8,9 +8,6 @@ services:
             - SOLR_OPTS=-Dsolr.clustering.enabled=true
         volumes:
             - solr_data:/var/solr
-            # Bind-mount the repo solrconfig.xml so the container uses the config from repo root
-            # This mounts a single file; ensure `solrconfig.xml` exists at the repo root when deploying.
-            - ./solrconfig.xml:/var/solr/data/movies/conf/solrconfig.xml:ro
 
         command: ["solr-precreate", "movies"]
 

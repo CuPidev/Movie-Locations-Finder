@@ -177,15 +177,30 @@ jobs:
                       # Start freshly; force rebuild and recreate to ensure config from repo is used.
                       sudo docker compose up -d --force-recreate --build
 
-                      # Wait for Solr to be ready (up to 60 seconds)
+                      # Wait for Solr HTTP to be available (up to 60 seconds)
                       for j in {1..60}; do
                         if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS" > /dev/null 2>&1; then
-                          echo "Solr is ready"
+                          echo "Solr HTTP endpoint is reachable"
                           break
                         fi
                         if [ $j -eq 60 ]; then
                           echo "ERROR: Solr from docker compose is not responding after 60 seconds"
                           exit 1
+                        fi
+                        sleep 1
+                      done
+
+                      # Wait for the 'movies' core to appear (up to 120 seconds)
+                      CORE_OK=0
+                      for k in {1..120}; do
+                        if curl -s "http://localhost:8983/solr/admin/cores?action=STATUS&core=movies" | grep -q '"movies"'; then
+                          CORE_OK=1
+                          echo "Solr core 'movies' is present"
+                          break
+                        fi
+                        if [ $k -eq 120 ]; then
+                          echo "ERROR: Solr core 'movies' did not appear after 120 seconds"
+                          break
                         fi
                         sleep 1
                       done
@@ -200,7 +215,7 @@ jobs:
 
                       # If a repo solrconfig.xml exists at the repo root, copy only that file
                       # into the running Solr container so we don't replace the full conf dir.
-                      if [ -n "$SOLR_CONTAINER" ] && [ -f "$DEPLOY_PATH/solrconfig.xml" ]; then
+                      if [ -n "$SOLR_CONTAINER" ] && [ -f "$DEPLOY_PATH/solrconfig.xml" ] && [ "$CORE_OK" -eq 1 ]; then
                         echo "Applying repo solrconfig.xml into running Solr container: $SOLR_CONTAINER"
                         sudo docker cp "$DEPLOY_PATH/solrconfig.xml" "$SOLR_CONTAINER":/var/solr/data/movies/conf/solrconfig.xml || true
                         sudo docker exec "$SOLR_CONTAINER" bash -lc "chown solr:solr /var/solr/data/movies/conf/solrconfig.xml" || true
@@ -208,7 +223,7 @@ jobs:
                         curl -s "http://localhost:8983/solr/admin/cores?action=RELOAD&core=movies" || true
                       else
                         if [ -f "$DEPLOY_PATH/solrconfig.xml" ]; then
-                          echo "Warning: could not find a running Solr container to apply solrconfig.xml"
+                          echo "Warning: could not apply solrconfig.xml because 'movies' core isn't ready or container not found"
                         fi
                       fi
                     fi
