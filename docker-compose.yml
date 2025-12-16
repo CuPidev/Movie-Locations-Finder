@@ -8,10 +8,6 @@ services:
             - SOLR_OPTS=-Dsolr.clustering.enabled=true
         volumes:
             - solr_data:/var/solr
-            # If the repo includes a core config at deployment/solr_conf, bind it
-            # into the movies core conf so the running container uses repo config.
-            # This mount is read-only to avoid accidental writes from the host.
-            - ./deployment/solr_conf:/var/solr/data/movies/conf:ro
 
         command: ["solr-precreate", "movies"]
 

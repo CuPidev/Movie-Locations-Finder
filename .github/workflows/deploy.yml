@@ -166,20 +166,6 @@ jobs:
                       echo "Starting services with docker compose..."
                       sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH"
 
-                      # If solr config files are at repo root, populate deployment/solr_conf
-                      if [ -f "$DEPLOY_PATH/solrconfig.xml" ] || [ -f "$DEPLOY_PATH/managed-schema" ]; then
-                        echo "Found solr config files at repo root — creating deployment/solr_conf"
-                        sudo mkdir -p "$DEPLOY_PATH/deployment/solr_conf"
-                        sudo cp -a "$DEPLOY_PATH/solrconfig.xml" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
-                        sudo cp -a "$DEPLOY_PATH/managed-schema" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
-                        sudo cp -a "$DEPLOY_PATH/synonyms.txt" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
-                        sudo cp -a "$DEPLOY_PATH/stopwords.txt" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
-                        if [ -d "$DEPLOY_PATH/lang" ]; then
-                          sudo cp -a "$DEPLOY_PATH/lang" "$DEPLOY_PATH/deployment/solr_conf/" 2>/dev/null || true
-                        fi
-                        sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_PATH/deployment/solr_conf"
-                      fi
-
                       cd "$DEPLOY_PATH"
                       sudo docker compose pull || true
                       sudo docker compose up -d
@@ -196,6 +182,17 @@ jobs:
                         fi
                         sleep 1
                       done
+
+                      # If a repo solrconfig.xml exists at the repo root, copy only that file
+                      # into the running Solr container so we don't replace the full conf dir.
+                      if [ -f "$DEPLOY_PATH/solrconfig.xml" ]; then
+                        echo "Applying repo solrconfig.xml into running Solr container"
+                        # Copy the single file into the container's core conf directory
+                        sudo docker cp "$DEPLOY_PATH/solrconfig.xml" heritage-solr-1:/var/solr/data/movies/conf/solrconfig.xml || true
+                        sudo docker exec heritage-solr-1 bash -lc "chown solr:solr /var/solr/data/movies/conf/solrconfig.xml" || true
+                        # Reload core to pick up changes
+                        curl -s "http://localhost:8983/solr/admin/cores?action=RELOAD&core=movies" || true
+                      fi
                     fi
 
                     # Install Python dependencies inside a venv as the deploy user
