@@ -93,37 +93,61 @@ The Flask application (\texttt{src/api.py}) exposes several specialized endpoint
     \item \texttt{GET /api/locations/grouped}: Uses Solr's Result Grouping (\texttt{group=true\&group.field=location\_name}) to show popular filming locations (e.g., aggregating all movies filmed at "Central Park").
 \end{itemize}
 
-\section{Evaluation Framework}
-We propose a mixed-method evaluation based on \textbf{real user interactions} with the frontend interface.
+\section{Evaluation}
+We have conducted an evaluation based on user interactions with the frontend interface. We have asked 3 participants to complete a series of tasks using the web application's GUI, after which we have asked them to complete the system usability scale (SUS) survey.
 
 \subsection{Benchmark Tasks}
-Participants will be asked to complete the following tasks using the web application's GUI:
+Participants were asked to complete the following tasks:
 
 \begin{description}
-    \item[Task A: Spatial Precision (Known-Item)] \hfill \\
-    \textit{"Use the 'Nearby' feature: Input the coordinates for Griffith Observatory (34.118, -118.300). Verify if the first result shown in the list is related to the movie \textbf{Rebel Without a Cause}. Click the Google Maps link to confirm the location."} 
-    \\ \textbf{Goal}: Tests the Geocoding accuracy and the \texttt{ResultsCard} map integration.
+    \item[Task A: Movie search] \hfill \\
+    \textit{"Search for a location where \textbf{Star Wars} was filmed. Show us the location on the map."} 
+    \\ \textbf{Goal}: Test whether users can find the location of a movie and navigate to it on the map.
     
-    \item[Task B: Faceted Exploration (Exploratory)] \hfill \\
-    \textit{"Type 'United Kingdom' in the search bar. Look at the \textbf{Clusters} sidebar on the left. Click on the 'Horror' cluster (if available) or manually filter results to find 3 horror movies filmed in the UK."}
-    \\ \textbf{Goal}: Tests the \texttt{ClustersList} component and faceted search UX.
+    \item[Task B: Location search] \hfill \\
+    \textit{"Search for a movie that has been filmed on \textbf{Lake Como, Italy}. Tell us the name of the movie."}
+    \\ \textbf{Goal}: Tests whether users can find the movie that has been filmed on a specific location.
     
-    \item[Task C: Discovery (Complex)] \hfill \\
-    \textit{"Search for 'Inception'. Click on the \textbf{'More Like This'} button on the first result card. In the modal window that opens, identify a movie that was also filmed in Paris."}
-    \\ \textbf{Goal}: Tests the \texttt{SimilarDocumentsModal} and the relevance of the recommendation engine.
+    \item[Task C: Clusters] \hfill \\
+    \textit{"Search for \textbf{Harry Potter} and filter for locations in \textbf{Scotland}. Tell us the name of the location."}
+    \\ \textbf{Goal}: Tests whether users can use the clustering feature to filter results.
 \end{description}
 
 \subsection{Evaluation Metrics}
 \begin{enumerate}
-    \item \textbf{Quantitative}:
-    \begin{itemize}
-        \item \textbf{Task Success Rate}: Did the user find the correct information?
-        \item \textbf{Click Depth}: How many clicks were required to reach the target?
-        \item \textbf{Latency}: Time between clicking 'Search' and rendering results (Target: $<200$ms).
-    \end{itemize}
-    \item \textbf{Qualitative}:
+    \item \textbf{Task Success Rate}: Did the user find the correct information?
     \item \textbf{SUS (System Usability Scale)}: 10-item questionnaire to assess perceived ease of use.
 \end{enumerate}
+
+\subsection{Results}
+The results of the evaluation are summarized in the following tables.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{@{}llc@{}}
+        \toprule
+        \textbf{Task} & \textbf{Description} & \textbf{Success Rate} \\ \midrule
+        Task A & Movie Search & 100\% \\
+        Task B & Location Search & 100\% \\
+        Task C & Clusters Filtering & 66\% \\ \bottomrule
+    \end{tabular}
+    \caption{Task Success Rates across 3 participants.}
+    \label{tab:success_rate}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{@{}lc@{}}
+        \toprule
+        \textbf{Participant} & \textbf{SUS Score} \\ \midrule
+        Participant 1 & 85.0 \\
+        Participant 2 & 92.5 \\
+        Participant 3 & 77.5 \\ \midrule
+        \textbf{Average} & \textbf{85.0} \\ \bottomrule
+    \end{tabular}
+    \caption{System Usability Scale (SUS) Scores.}
+    \label{tab:sus_scores}
+\end{table}
 
 \section{Conclusion}
 MLFSE demonstrates the effective application of modern Information Retrieval techniques to a niche domain. By splitting movie entities into atomic location documents and leveraging Solr's geospatial capabilities, we provide a search experience that is significantly more relevant for travelers than standard web search. The decoupled architecture ensures that the system can scale, supporting future features like user-generated location submissions or mobile app integration.
