@@ -1,4 +1,4 @@
-# Movie Locations Finder Search Engine (MLFSE)
+# Scene Scout Search Engine
 
 ## Repository Structure
 
@@ -16,13 +16,28 @@
 ## Installation
 
 ### 1. Python Environment Setup
-Create virtual enviornment for python 3.10 or newer and install python dependencies (or be a gigachad and do it globally)
+#### Option 1: pyenv
+```bash
+pyenv virtualenv 3.12.9 movies
+pyenv activate movies
+```
+
+#### Option 2: venv
+
+Make sure the python available on your system path is of version 3.10 or newer (python --vesion). 
+
+```bash 
+python -m venv .venv
+source .venv/bin/activate
+```
+
+### 2. Python dependency installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Frontend Compilation
+### 3. Frontend Compilation
 
 Make sure you have node and yarn installed. Go into the frontend dir
 
@@ -42,7 +57,7 @@ Build the frontend
 yarn build
 ```
 
-### 3. Apache Solr Setup
+### 4. Apache Solr Setup
 
 This project uses Apache Solr for search functionality. To install Solr and create the `movies` core, follow one of the options below. Java 11+ is required to be installed.
 
@@ -52,8 +67,15 @@ This project uses Apache Solr for search functionality. To install Solr and crea
 docker compose up -d
 ```
 
-**Option 2: Manual Installation**
+**Option 2: Using Homebrew (MacOS)**
 
+```bash
+brew install solr
+solr start
+solr create -c movies
+```
+
+**Option 3: Manual Installation**
 [Download Solr](https://solr.apache.org/downloads.html), extract it, and run the following from the `bin` directory:
 
 ```bash
@@ -66,18 +88,22 @@ docker compose up -d
 ./solr create -c movies
 ```
 
-**Option 3: Using Homebrew (MacOS)**
+Copy `solrconfig.xml` from project root to `solr-9.x/server/solr/movies/conf`, replacing the one inside.
 
+Restart Solr to apply the changes.
 ```bash
-brew install solr
-solr start
-solr create -c movies
-```
+# Windows
+.\solr.cmd stop
+.\solr.cmd start
 
+# Linux/MacOS
+./solr stop
+./solr start
+```
 
 The Solr admin UI should now be available at `http://localhost:8983/solr/`.
 
-### 4. Indexing Data
+### 5. Indexing Data
 
 The repository already contains data that is ready to be indexed in the `data` directory. This data has been scraped from the following sources:
 
@@ -91,7 +117,7 @@ Before running the indexer, make sure Solr is running. Then run:
 python index_data.py
 ```
 
-### 5. Scraping for New Data (Optional)
+### 6. Scraping for New Data (Optional)
 
 To get updated data, run the crawler using 
 
@@ -103,13 +129,13 @@ python ./crawler/movielocationsca_crawler.py
 
 after which new data will be available in the `temp` directory. Move the files from `temp` to `data` and run the indexer again.
 
-### 6. Run the App
+### 7. Run the App
 
 ```bash
 python run_api.py
 ```
 
-The app will be available at 127.0.0.1:5000 by default
+The app will be available at 127.0.0.1:5001 by default
 
 ## VPS Deployment
 
@@ -117,12 +143,17 @@ The GitHub Actions workflow automatically sets up Solr, creates the `movies` cor
 
 ## Troubleshooting
 
+**App fails to run?**
+- Ensure your Python environment is set and is being used.
+
 **No search results?**
+- Ensure Solr is running.
 ```bash
 curl "http://localhost:8983/solr/movies/select?q=*:*&rows=0"
 ```
+If it return a JSON value, it is running correctly.
+- Ensure you have indexed the data.
 
 **Solr not starting?**
 - Ensure Java 11+ is installed: `java -version`
 - Check port 8983 is available
-Sonar Check test
